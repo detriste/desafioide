@@ -1,0 +1,7 @@
+{
+  "name": "Marilan",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular"
+}
