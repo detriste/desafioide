@@ -1,20 +1,27 @@
 <ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-title>
-      Blank
-    </ion-title>
+  <ion-toolbar color="primary">
+    <ion-title>Marilan - Manutenção</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">Blank</ion-title>
-    </ion-toolbar>
-  </ion-header>
+  <div class="escolha-container">
+    <div class="logo-area">
+      <ion-icon name="construct-outline" class="logo-icon"></ion-icon>
+      <h1>Bem-vindo</h1>
+      <p>Selecione sua área de acesso</p>
+    </div>
 
-  <div id="container">
-    <strong>Ready to create an app?</strong>
-    <p>Start with Ionic <a target="_blank" rel="noopener noreferrer" href="https://ionicframework.com/docs/components">UI Components</a></p>
+    <div class="botoes-area">
+      <ion-button expand="block" size="large" color="primary" routerLink="/login-manutentor">
+        <ion-icon name="hammer-outline" slot="start"></ion-icon>
+        Manutentor
+      </ion-button>
+
+      <ion-button expand="block" size="large" color="secondary" routerLink="/login-almoxarife">
+        <ion-icon name="cube-outline" slot="start"></ion-icon>
+        Almoxarife
+      </ion-button>
+    </div>
   </div>
 </ion-content>

@@ -1,13 +1,57 @@
 <ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-title>login-almoxarife</ion-title>
+  <ion-toolbar color="secondary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/home" text="Voltar"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Login Almoxarife</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">login-almoxarife</ion-title>
-    </ion-toolbar>
-  </ion-header>
+  <div class="login-container">
+    <div class="login-header">
+      <ion-icon name="cube-outline" class="login-icon"></ion-icon>
+      <h2>Acesso Almoxarife</h2>
+    </div>
+
+    <div class="login-form">
+      <ion-item lines="full">
+        <ion-label position="floating">CPF</ion-label>
+        <ion-input
+          type="text"
+          [(ngModel)]="cpf"
+          placeholder="000.000.000-00"
+          maxlength="14"
+          (ionInput)="formatarCpf($event)">
+        </ion-input>
+      </ion-item>
+
+      <ion-item lines="full">
+        <ion-label position="floating">Senha</ion-label>
+        <ion-input
+          [type]="mostrarSenha ? 'text' : 'password'"
+          [(ngModel)]="senha"
+          placeholder="Digite sua senha">
+        </ion-input>
+        <ion-button fill="clear" slot="end" (click)="toggleSenha()">
+          <ion-icon [name]="mostrarSenha ? 'eye-off-outline' : 'eye-outline'"></ion-icon>
+        </ion-button>
+      </ion-item>
+
+      <div class="erro-msg" *ngIf="erroLogin">
+        <ion-icon name="alert-circle-outline"></ion-icon>
+        {{ erroLogin }}
+      </div>
+
+      <ion-button
+        expand="block"
+        color="secondary"
+        class="btn-entrar"
+        (click)="login()"
+        [disabled]="carregando">
+        <ion-spinner *ngIf="carregando" name="crescent"></ion-spinner>
+        <span *ngIf="!carregando">Entrar</span>
+      </ion-button>
+    </div>
+  </div>
 </ion-content>
