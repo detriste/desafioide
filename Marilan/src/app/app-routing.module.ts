@@ -18,7 +18,15 @@ const routes: Routes = [
   {
     path: 'almoxarife',
     loadChildren: () => import('./almoxarife/almoxarife.module').then( m => m.AlmoxarifePageModule)
+  },  {
+    path: 'login-manutentor',
+    loadChildren: () => import('./login-manutentor/login-manutentor.module').then( m => m.LoginManutentorPageModule)
   },
+  {
+    path: 'login-almoxarife',
+    loadChildren: () => import('./login-almoxarife/login-almoxarife.module').then( m => m.LoginAlmoxarifePageModule)
+  },
+
 ];
 
 @NgModule({
