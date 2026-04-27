@@ -1,5 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { AuthService } from '../services/auth';
+import { finalize } from 'rxjs/operators'; // ✅ IMPORTANTE
 
 @Component({
   selector: 'app-login-almoxarife',
@@ -15,7 +17,7 @@ export class LoginAlmoxarifePage implements OnInit {
   carregando: boolean = false;
   erroLogin: string = '';
 
-  constructor(private router: Router) {}
+  constructor(private router: Router, private authService: AuthService) {}
 
   ngOnInit() {}
 
@@ -44,15 +46,20 @@ export class LoginAlmoxarifePage implements OnInit {
 
     this.carregando = true;
 
-    // Simulação de autenticação — substitua pela chamada real à API
-    setTimeout(() => {
-      this.carregando = false;
-      // Credenciais de exemplo para teste
-      if (this.cpf === '000.000.000-00' && this.senha === '1234') {
-        this.router.navigateByUrl('/almoxarife', { replaceUrl: true });
-      } else {
-        this.erroLogin = 'CPF ou senha incorretos.';
-      }
-    }, 1000);
+    this.authService.loginAlmoxarife(this.cpf, this.senha)
+      .pipe(
+        finalize(() => {
+          this.carregando = false;
+        })
+      )
+      .subscribe({
+        next: (res: any) => { // ✅ tipagem corrigida
+          sessionStorage.setItem('usuario', JSON.stringify(res.usuario));
+          this.router.navigateByUrl('/almoxarife', { replaceUrl: true });
+        },
+        error: (err) => {
+          this.erroLogin = err.error?.erro || 'CPF ou senha incorretos.';
+        }
+      });
   }
-}
+} // ✅ FECHAMENTO DA CLASSE
