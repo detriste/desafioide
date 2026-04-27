@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
   selector: 'app-login-almoxarife',
   templateUrl: './login-almoxarife.page.html',
   styleUrls: ['./login-almoxarife.page.scss'],
+  standalone: false,
 })
 export class LoginAlmoxarifePage implements OnInit {
 

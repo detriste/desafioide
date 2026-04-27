@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
   selector: 'app-login-manutentor',
   templateUrl: './login-manutentor.page.html',
   styleUrls: ['./login-manutentor.page.scss'],
+  standalone: false,
 })
 export class LoginManutentorPage implements OnInit {
 
