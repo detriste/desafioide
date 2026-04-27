@@ -13,7 +13,8 @@
 
   .logo-icon {
     font-size: 80px;
-    color: var(--ion-color-primary);
+    /* Usa a variável global, assim se você mudar a cor lá, aqui muda automático */
+    color: var(--ion-color-primary); 
   }
 
   h1 {
