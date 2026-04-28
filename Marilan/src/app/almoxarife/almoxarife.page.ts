@@ -38,20 +38,20 @@ export interface Ferramenta {
 })
 export class AlmoxarifePage implements OnInit {
 
-  modalDisponivel = false;
-  modalEmUso      = false;
-  modalManutencao = false;
+  modalRetiradaAberto = false;
+  modalManutencaoAberto = false;
 
   ferramentaSelecionada: Ferramenta | null = null;
   erroModal = '';
 
-  novoManutentor = {
-    nome: '',
-    area: '',
-    ordemServico: ''
+  dadosRetirada = {
+    usuario_nome: '',
+    usuario_area: '',
+    ordem_servico: ''
   };
 
-  observacaoManutencao = '';
+  descricaoManutencao = '';
+  salvando = false;
 
   termoBusca   = '';
   filtroStatus = 'todos';
@@ -139,46 +139,47 @@ export class AlmoxarifePage implements OnInit {
     }[status] ?? status;
   }
 
-  abrirModal(f: Ferramenta) {
+  abrirModalRetirada(f: Ferramenta) {
     this.ferramentaSelecionada = f;
     this.erroModal = '';
-    this.novoManutentor = { nome: '', area: '', ordemServico: '' };
-    this.observacaoManutencao = '';
+    this.dadosRetirada = { usuario_nome: '', usuario_area: '', ordem_servico: '' };
+    this.descricaoManutencao = '';
+    this.modalRetiradaAberto = true;
+  }
 
-    if (f.status === 'disponivel') {
-      this.modalDisponivel = true;
-    } else if (f.status === 'em_uso') {
-      this.modalEmUso = true;
-    } else {
-      this.modalManutencao = true;
-    }
+  abrirModalManutencao(f: Ferramenta) {
+    this.ferramentaSelecionada = f;
+    this.erroModal = '';
+    this.descricaoManutencao = '';
+    this.modalManutencaoAberto = true;
   }
 
   fecharModais() {
-    this.modalDisponivel = false;
-    this.modalEmUso = false;
-    this.modalManutencao = false;
+    this.modalRetiradaAberto = false;
+    this.modalManutencaoAberto = false;
     this.ferramentaSelecionada = null;
     this.erroModal = '';
+    this.salvando = false;
   }
 
-  confirmarEmUso() {
+  confirmarRetirada() {
     const f = this.ferramentaSelecionada!;
 
-    if (!this.novoManutentor.nome.trim()) {
-      this.erroModal = 'Informe o nome.';
+    if (!this.dadosRetirada.usuario_nome?.trim()) {
+      this.erroModal = 'Informe o nome do usuário.';
       return;
     }
 
-    if (!this.novoManutentor.area) {
+    if (!this.dadosRetirada.usuario_area) {
       this.erroModal = 'Informe a área.';
       return;
     }
 
+    this.salvando = true;
     this.http.post(`${this.API}/ferramentas/${f.id}/retirar`, {
-      usuario_nome: this.novoManutentor.nome,
-      usuario_area: this.novoManutentor.area,
-      ordem_servico: this.novoManutentor.ordemServico
+      usuario_nome: this.dadosRetirada.usuario_nome,
+      usuario_area: this.dadosRetirada.usuario_area,
+      ordem_servico: this.dadosRetirada.ordem_servico
     }).subscribe({
       next: () => {
         this.fecharModais();
@@ -186,8 +187,42 @@ export class AlmoxarifePage implements OnInit {
       },
       error: (err) => {
         this.erroModal = err.error?.erro || 'Erro ao retirar.';
+        this.salvando = false;
       }
     });
+  }
+
+  confirmarManutencao() {
+    const f = this.ferramentaSelecionada!;
+
+    if (!this.descricaoManutencao.trim()) {
+      this.erroModal = 'Descreva o problema.';
+      return;
+    }
+
+    this.salvando = true;
+    this.http.post(`${this.API}/ferramentas/${f.id}/manutencao`, {
+      observacao: this.descricaoManutencao
+    }).subscribe({
+      next: () => {
+        this.fecharModais();
+        this.carregarFerramentas();
+      },
+      error: (err) => {
+        this.erroModal = err.error?.erro || 'Erro na manutenção.';
+        this.salvando = false;
+      }
+    });
+  }
+
+  executarDevolucao(f: Ferramenta) {
+    this.ferramentaSelecionada = f;
+    this.confirmarDevolucao();
+  }
+
+  executarDisponibilizar(f: Ferramenta) {
+    this.ferramentaSelecionada = f;
+    this.confirmarManutencaoConcluida();
   }
 
   confirmarDevolucao() {
@@ -214,27 +249,6 @@ export class AlmoxarifePage implements OnInit {
       },
       error: (err) => {
         this.exibirToast(err.error?.erro || 'Erro ao liberar.', 'danger');
-      }
-    });
-  }
-
-  enviarParaManutencao() {
-    const f = this.ferramentaSelecionada!;
-
-    if (!this.observacaoManutencao.trim()) {
-      this.erroModal = 'Descreva o problema.';
-      return;
-    }
-
-    this.http.post(`${this.API}/ferramentas/${f.id}/manutencao`, {
-      observacao: this.observacaoManutencao
-    }).subscribe({
-      next: () => {
-        this.fecharModais();
-        this.carregarFerramentas();
-      },
-      error: (err) => {
-        this.erroModal = err.error?.erro || 'Erro na manutenção.';
       }
     });
   }
