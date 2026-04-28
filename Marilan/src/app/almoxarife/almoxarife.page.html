@@ -122,7 +122,16 @@
             Devolver
           </ion-button>
 
-          <!-- Manutenção -->
+          <ion-button
+            *ngIf="f.status !== 'manutencao'"
+            size="small"
+            color="danger"
+            fill="outline"
+            (click)="ferramentaSelecionada = f; modalManutencao = true; $event.stopPropagation()">
+            Manutenção
+          </ion-button>
+
+          <!-- Em manutenção -->
           <ion-button
             *ngIf="f.status === 'manutencao'"
             size="small"
@@ -141,6 +150,82 @@
       <ion-icon name="search-outline"></ion-icon>
       <p>Nenhuma ferramenta encontrada</p>
     </div>
-
   </ion-list>
+
+<!-- MODAL RETIRADA -->
+<div class="painel-overlay" *ngIf="modalDisponivel" (click)="fecharModais()"></div>
+
+<div class="painel-bottom" [class.aberto]="modalDisponivel">
+  <h3>Retirar Ferramenta</h3>
+
+  <p>{{ ferramentaSelecionada?.nome }}</p>
+
+  <ion-item>
+    <ion-input [(ngModel)]="novoManutentor.nome" placeholder="Nome"></ion-input>
+  </ion-item>
+
+  <!-- 🔥 NOVO CAMPO -->
+  <ion-item>
+    <ion-input [(ngModel)]="novoManutentor.ordemServico" placeholder="Ordem de Serviço"></ion-input>
+  </ion-item>
+
+  <ion-item>
+    <ion-input [(ngModel)]="novoManutentor.area" placeholder="Área"></ion-input>
+  </ion-item>
+
+  <div class="erro-modal" *ngIf="erroModal">{{ erroModal }}</div>
+
+  <ion-button expand="block" (click)="confirmarEmUso()">
+    Confirmar
+  </ion-button>
+
+  <ion-button expand="block" fill="clear" (click)="fecharModais()">
+    Cancelar
+  </ion-button>
+</div>
+
+<!-- MODAL EM USO -->
+<div class="painel-overlay" *ngIf="modalEmUso" (click)="fecharModais()"></div>
+
+<div class="painel-bottom" [class.aberto]="modalEmUso">
+  <h3>Devolver Ferramenta</h3>
+
+  <p>{{ ferramentaSelecionada?.nome }}</p>
+
+  <div class="erro-modal" *ngIf="erroModal">{{ erroModal }}</div>
+
+  <ion-button expand="block" color="warning" (click)="confirmarDevolucao()">
+    Confirmar Devolução
+  </ion-button>
+
+  <ion-button expand="block" fill="clear" (click)="fecharModais()">
+    Cancelar
+  </ion-button>
+</div>
+
+<!-- MODAL MANUTENÇÃO -->
+<div class="painel-overlay" *ngIf="modalManutencao" (click)="fecharModais()"></div>
+
+<div class="painel-bottom" [class.aberto]="modalManutencao">
+  <h3>Enviar para Manutenção</h3>
+
+  <p>{{ ferramentaSelecionada?.nome }}</p>
+
+  <ion-item>
+    <ion-textarea
+      [(ngModel)]="observacaoManutencao"
+      placeholder="Descreva o problema">
+    </ion-textarea>
+  </ion-item>
+
+  <div class="erro-modal" *ngIf="erroModal">{{ erroModal }}</div>
+
+  <ion-button expand="block" color="danger" (click)="enviarParaManutencao()">
+    Enviar
+  </ion-button>
+
+  <ion-button expand="block" fill="clear" (click)="fecharModais()">
+    Cancelar
+  </ion-button>
+</div>
 </ion-content>

@@ -5,7 +5,6 @@ import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 
 import { AlmoxarifePageRoutingModule } from './almoxarife-routing.module';
-
 import { AlmoxarifePage } from './almoxarife.page';
 
 @NgModule({
@@ -13,8 +12,9 @@ import { AlmoxarifePage } from './almoxarife.page';
     CommonModule,
     FormsModule,
     IonicModule,
-    AlmoxarifePageRoutingModule
-  ],
-  declarations: [AlmoxarifePage]
+    AlmoxarifePageRoutingModule,
+    AlmoxarifePage // ✅ CORREÇÃO AQUI
+  ]
+  // ❌ REMOVIDO: declarations
 })
 export class AlmoxarifePageModule {}

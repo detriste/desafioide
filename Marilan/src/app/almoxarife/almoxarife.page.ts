@@ -1,4 +1,8 @@
 import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common'; // ✅ ADICIONADO
+import { FormsModule } from '@angular/forms';   // ✅ ADICIONADO
+import { IonicModule } from '@ionic/angular';   // ✅ ADICIONADO
+
 import { Router } from '@angular/router';
 import { ToastController } from '@ionic/angular';
 import { HttpClient } from '@angular/common/http';
@@ -6,6 +10,7 @@ import { HttpClient } from '@angular/common/http';
 export interface Manutentor {
   nome: string;
   area: string;
+  ordemServico?: string;
   dataRetirada?: Date;
 }
 
@@ -24,11 +29,15 @@ export interface Ferramenta {
   selector: 'app-almoxarife',
   templateUrl: './almoxarife.page.html',
   styleUrls: ['./almoxarife.page.scss'],
-  standalone: false,
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule,
+    IonicModule
+  ] // ✅ ESSA PARTE RESOLVE TODOS OS ERROS
 })
 export class AlmoxarifePage implements OnInit {
 
-  // ── Estado dos modais ──────────────────────────────────
   modalDisponivel = false;
   modalEmUso      = false;
   modalManutencao = false;
@@ -36,61 +45,71 @@ export class AlmoxarifePage implements OnInit {
   ferramentaSelecionada: Ferramenta | null = null;
   erroModal = '';
 
-  novoManutentor: { nome: string; area: string } = { nome: '', area: '' };
+  novoManutentor = {
+    nome: '',
+    area: '',
+    ordemServico: ''
+  };
 
-  // ── Filtros ────────────────────────────────────────────
+  observacaoManutencao = '';
+
   termoBusca   = '';
   filtroStatus = 'todos';
 
-  // ── Dados ──────────────────────────────────────────────
-  ferramentas: Ferramenta[] = [
-  ];
-ferramentasFiltradas: Ferramenta[] = [];
-carregando = false;
+  ferramentas: Ferramenta[] = [];
+  ferramentasFiltradas: Ferramenta[] = [];
+  carregando = false;
 
-private API = 'http://localhost:3000/api';
+  private API = 'http://localhost:3000/api';
 
-constructor(
-  private router: Router,
-  private http: HttpClient,
-  private toastCtrl: ToastController,
-) {}
+  constructor(
+    private router: Router,
+    private http: HttpClient,
+    private toastCtrl: ToastController,
+  ) {}
 
-ngOnInit() {
-  this.carregarFerramentas();
-}
+  ngOnInit() {
+    this.carregarFerramentas();
+  }
 
-carregarFerramentas() {
-  this.carregando = true;
-  this.http.get<any[]>(`${this.API}/ferramentas`).subscribe({
-    next: (dados) => {
-      this.ferramentas = dados.map(f => ({
-        id:         f.id,
-        codigo:     f.codigo,
-        nome:       f.nome,
-        descricao:  f.nome,
-        quantidade: f.quantidade_estoque,
-        status:     (f.estoque_final > 0 ? 'disponivel' : 'em_uso') as any,
-        manutentor: undefined,
-      }));
-      this.ferramentasFiltradas = [...this.ferramentas];
-      this.carregando = false;
-    },
-    error: () => {
-      this.exibirToast('Erro ao carregar ferramentas.', 'danger');
-      this.carregando = false;
-    }
-  });
-}
-  // ── Filtro ─────────────────────────────────────────────
+  carregarFerramentas() {
+    this.carregando = true;
+
+    this.http.get<any[]>(`${this.API}/ferramentas`).subscribe({
+      next: (dados) => {
+        this.ferramentas = dados.map(f => ({
+          id:         f.id,
+          codigo:     f.codigo,
+          nome:       f.nome,
+          descricao:  f.descricao ?? f.nome,
+          quantidade: f.quantidade_estoque,
+          status:     f.status,
+          manutentor: f.usuario_nome ? {
+            nome:         f.usuario_nome,
+            area:         f.usuario_area,
+            ordemServico: f.observacao?.replace('OS: ', ''),
+            dataRetirada: f.data_retirada ? new Date(f.data_retirada) : undefined,
+          } : undefined,
+        }));
+
+        this.filtrar();
+        this.carregando = false;
+      },
+      error: () => {
+        this.exibirToast('Erro ao carregar ferramentas.', 'danger');
+        this.carregando = false;
+      }
+    });
+  }
+
   filtrar() {
     const termo = this.termoBusca.toLowerCase().trim();
+
     this.ferramentasFiltradas = this.ferramentas.filter(f => {
       const matchTermo =
         !termo ||
         f.nome.toLowerCase().includes(termo) ||
-        f.codigo.toLowerCase().includes(termo) ||
-        f.descricao.toLowerCase().includes(termo);
+        f.codigo.toLowerCase().includes(termo);
 
       const matchStatus =
         this.filtroStatus === 'todos' || f.status === this.filtroStatus;
@@ -104,118 +123,132 @@ carregarFerramentas() {
     this.filtrar();
   }
 
-  // ── Helpers visuais ────────────────────────────────────
   getBadgeColor(status: string): string {
-    const map: Record<string, string> = {
+    return {
       disponivel: 'success',
-      em_uso:     'warning',
-      manutencao: 'danger',
-    };
-    return map[status] ?? 'medium';
+      em_uso: 'warning',
+      manutencao: 'danger'
+    }[status] ?? 'medium';
   }
 
   getStatusLabel(status: string): string {
-    const map: Record<string, string> = {
+    return {
       disponivel: 'Disponível',
-      em_uso:     'Em Uso',
-      manutencao: 'Manutenção',
-    };
-    return map[status] ?? status;
+      em_uso: 'Em Uso',
+      manutencao: 'Manutenção'
+    }[status] ?? status;
   }
 
-  // ── Tempo em uso ───────────────────────────────────────
-  calcularTempo(dataRetirada: Date | undefined): string {
-    if (!dataRetirada) return '-';
-    const diff = Date.now() - new Date(dataRetirada).getTime();
-    const min  = Math.floor(diff / 60000);
-    const h    = Math.floor(min / 60);
-    const m    = min % 60;
-    if (h > 0) return `${h}h ${m}min`;
-    return `${m}min`;
-  }
-
-  // ── Abrir modal conforme status ────────────────────────
   abrirModal(f: Ferramenta) {
     this.ferramentaSelecionada = f;
-    this.erroModal             = '';
-    this.novoManutentor        = { nome: '', area: '' };
+    this.erroModal = '';
+    this.novoManutentor = { nome: '', area: '', ordemServico: '' };
+    this.observacaoManutencao = '';
 
     if (f.status === 'disponivel') {
       this.modalDisponivel = true;
     } else if (f.status === 'em_uso') {
       this.modalEmUso = true;
-    } else if (f.status === 'manutencao') {
+    } else {
       this.modalManutencao = true;
     }
   }
 
   fecharModais() {
-    this.modalDisponivel        = false;
-    this.modalEmUso             = false;
-    this.modalManutencao        = false;
-    this.ferramentaSelecionada  = null;
-    this.erroModal              = '';
+    this.modalDisponivel = false;
+    this.modalEmUso = false;
+    this.modalManutencao = false;
+    this.ferramentaSelecionada = null;
+    this.erroModal = '';
   }
 
-  // ── Ação: Disponível → Em Uso ──────────────────────────
   confirmarEmUso() {
-    if (!this.novoManutentor.nome.trim()) {
-      this.erroModal = 'Informe o nome do manutentor.';
-      return;
-    }
-    if (!this.novoManutentor.area) {
-      this.erroModal = 'Selecione a oficina.';
-      return;
-    }
-
     const f = this.ferramentaSelecionada!;
-    f.status    = 'em_uso';
-    f.manutentor = {
-      nome:         this.novoManutentor.nome.trim(),
-      area:         this.novoManutentor.area,
-      dataRetirada: new Date(),
-    };
 
-    this.filtrar();
-    this.fecharModais();
-    this.exibirToast(`"${f.nome}" registrada como Em Uso.`, 'warning');
+    if (!this.novoManutentor.nome.trim()) {
+      this.erroModal = 'Informe o nome.';
+      return;
+    }
+
+    if (!this.novoManutentor.area) {
+      this.erroModal = 'Informe a área.';
+      return;
+    }
+
+    this.http.post(`${this.API}/ferramentas/${f.id}/retirar`, {
+      usuario_nome: this.novoManutentor.nome,
+      usuario_area: this.novoManutentor.area,
+      ordem_servico: this.novoManutentor.ordemServico
+    }).subscribe({
+      next: () => {
+        this.fecharModais();
+        this.carregarFerramentas();
+      },
+      error: (err) => {
+        this.erroModal = err.error?.erro || 'Erro ao retirar.';
+      }
+    });
   }
 
-  // ── Ação: Em Uso → Disponível ──────────────────────────
   confirmarDevolucao() {
     const f = this.ferramentaSelecionada!;
-    f.status     = 'disponivel';
-    f.manutentor = undefined;
 
-    this.filtrar();
-    this.fecharModais();
-    this.exibirToast(`"${f.nome}" devolvida e disponível.`, 'success');
+    this.http.post(`${this.API}/ferramentas/${f.id}/devolver`, {}).subscribe({
+      next: () => {
+        this.fecharModais();
+        this.carregarFerramentas();
+      },
+      error: (err) => {
+        this.exibirToast(err.error?.erro || 'Erro ao devolver.', 'danger');
+      }
+    });
   }
 
-  // ── Ação: Manutenção → Disponível ─────────────────────
   confirmarManutencaoConcluida() {
     const f = this.ferramentaSelecionada!;
-    f.status     = 'disponivel';
-    f.manutentor = undefined;
 
-    this.filtrar();
-    this.fecharModais();
-    this.exibirToast(`"${f.nome}" liberada após manutenção.`, 'success');
+    this.http.post(`${this.API}/ferramentas/${f.id}/disponibilizar`, {}).subscribe({
+      next: () => {
+        this.fecharModais();
+        this.carregarFerramentas();
+      },
+      error: (err) => {
+        this.exibirToast(err.error?.erro || 'Erro ao liberar.', 'danger');
+      }
+    });
   }
 
-  // ── Toast ──────────────────────────────────────────────
+  enviarParaManutencao() {
+    const f = this.ferramentaSelecionada!;
+
+    if (!this.observacaoManutencao.trim()) {
+      this.erroModal = 'Descreva o problema.';
+      return;
+    }
+
+    this.http.post(`${this.API}/ferramentas/${f.id}/manutencao`, {
+      observacao: this.observacaoManutencao
+    }).subscribe({
+      next: () => {
+        this.fecharModais();
+        this.carregarFerramentas();
+      },
+      error: (err) => {
+        this.erroModal = err.error?.erro || 'Erro na manutenção.';
+      }
+    });
+  }
+
   async exibirToast(message: string, color: string) {
     const toast = await this.toastCtrl.create({
       message,
       color,
       duration: 2500,
-      position: 'bottom',
-      icon: 'checkmark-circle-outline',
+      position: 'bottom'
     });
     await toast.present();
   }
 
-  // ── Sair ───────────────────────────────────────────────
   sair() {
     sessionStorage.removeItem('usuario');
     this.router.navigateByUrl('/home', { replaceUrl: true });
