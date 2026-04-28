@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common'; // ✅ ADICIONADO
-import { FormsModule } from '@angular/forms';   // ✅ ADICIONADO
-import { IonicModule } from '@ionic/angular';   // ✅ ADICIONADO
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { IonicModule } from '@ionic/angular';
 
 import { Router } from '@angular/router';
 import { ToastController } from '@ionic/angular';
@@ -34,7 +34,7 @@ export interface Ferramenta {
     CommonModule,
     FormsModule,
     IonicModule
-  ] // ✅ ESSA PARTE RESOLVE TODOS OS ERROS
+  ]
 })
 export class AlmoxarifePage implements OnInit {
 
@@ -45,6 +45,7 @@ export class AlmoxarifePage implements OnInit {
   erroModal = '';
 
   dadosRetirada = {
+    cpf: '',
     usuario_nome: '',
     usuario_area: '',
     ordem_servico: ''
@@ -142,7 +143,7 @@ export class AlmoxarifePage implements OnInit {
   abrirModalRetirada(f: Ferramenta) {
     this.ferramentaSelecionada = f;
     this.erroModal = '';
-    this.dadosRetirada = { usuario_nome: '', usuario_area: '', ordem_servico: '' };
+    this.dadosRetirada = { cpf: '', usuario_nome: '', usuario_area: '', ordem_servico: '' };
     this.descricaoManutencao = '';
     this.modalRetiradaAberto = true;
   }
@@ -162,16 +163,40 @@ export class AlmoxarifePage implements OnInit {
     this.salvando = false;
   }
 
+  // ── Busca automática por CPF ────────────────────────────────────────────────
+  buscarUsuarioPorCPF() {
+    const cpf = this.dadosRetirada.cpf?.trim();
+    if (!cpf) return;
+
+    this.erroModal = '';
+    this.http.get<any>(`${this.API}/usuarios/cpf/${cpf}`).subscribe({
+      next: (res) => {
+        this.dadosRetirada.usuario_nome = res.nome;
+        this.dadosRetirada.usuario_area = res.area;
+      },
+      error: () => {
+        this.erroModal = 'Usuário não encontrado.';
+        this.dadosRetirada.usuario_nome = '';
+        this.dadosRetirada.usuario_area = '';
+      }
+    });
+  }
+
   confirmarRetirada() {
     const f = this.ferramentaSelecionada!;
 
+    if (!this.dadosRetirada.cpf?.trim()) {
+      this.erroModal = 'Informe o CPF.';
+      return;
+    }
+
     if (!this.dadosRetirada.usuario_nome?.trim()) {
-      this.erroModal = 'Informe o nome do usuário.';
+      this.erroModal = 'CPF não encontrado. Verifique e tente novamente.';
       return;
     }
 
     if (!this.dadosRetirada.usuario_area) {
-      this.erroModal = 'Informe a área.';
+      this.erroModal = 'Área não encontrada. Verifique o CPF.';
       return;
     }
 

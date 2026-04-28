@@ -55,26 +55,26 @@
           </p>
         </div>
 
-        <!-- 🔥 BOTÕES -->
+        <!-- BOTÕES -->
         <div style="margin-top:10px; display:flex; gap:6px; flex-wrap:wrap;">
 
           <!-- DISPONÍVEL -->
-<ion-button
-  *ngIf="f.status==='disponivel'"
-  size="small"
-  color="success"
-  (click)="abrirModalRetirada(f); $event.stopPropagation()">
-  Retirar
-</ion-button>
+          <ion-button
+            *ngIf="f.status==='disponivel'"
+            size="small"
+            color="success"
+            (click)="abrirModalRetirada(f); $event.stopPropagation()">
+            Retirar
+          </ion-button>
 
-<ion-button
-  *ngIf="f.status==='disponivel'"
-  size="small"
-  color="danger"
-  fill="outline"
-  (click)="abrirModalManutencao(f); $event.stopPropagation()">
-  Manutenção
-</ion-button>
+          <ion-button
+            *ngIf="f.status==='disponivel'"
+            size="small"
+            color="danger"
+            fill="outline"
+            (click)="abrirModalManutencao(f); $event.stopPropagation()">
+            Manutenção
+          </ion-button>
 
           <!-- EM USO -->
           <ion-button
@@ -111,7 +111,7 @@
 
 </ion-content>
 
-<!-- 🔥 MODAL RETIRADA -->
+<!-- MODAL RETIRADA -->
 <ion-modal [isOpen]="modalRetiradaAberto" (didDismiss)="fecharModais()">
   <ng-template>
 
@@ -130,9 +130,31 @@
 
       <ion-item>
         <ion-input
+          label="CPF"
+          labelPlacement="stacked"
+          [(ngModel)]="dadosRetirada.cpf"
+          placeholder="000.000.000-00"
+          (ionBlur)="buscarUsuarioPorCPF()">
+        </ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-input
           label="Nome"
           labelPlacement="stacked"
-          [(ngModel)]="dadosRetirada.usuario_nome">
+          [(ngModel)]="dadosRetirada.usuario_nome"
+          [readonly]="true"
+          placeholder="Preenchido automaticamente">
+        </ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-input
+          label="Área"
+          labelPlacement="stacked"
+          [(ngModel)]="dadosRetirada.usuario_area"
+          [readonly]="true"
+          placeholder="Preenchido automaticamente">
         </ion-input>
       </ion-item>
 
@@ -142,17 +164,6 @@
           labelPlacement="stacked"
           [(ngModel)]="dadosRetirada.ordem_servico">
         </ion-input>
-      </ion-item>
-
-      <ion-item>
-        <ion-select
-          label="Área"
-          labelPlacement="stacked"
-          [(ngModel)]="dadosRetirada.usuario_area">
-          <ion-select-option value="MME">MME</ion-select-option>
-          <ion-select-option value="MEC">MEC</ion-select-option>
-          <ion-select-option value="ELE">ELE</ion-select-option>
-        </ion-select>
       </ion-item>
 
       <ion-text color="danger" *ngIf="erroModal">
@@ -168,7 +179,7 @@
   </ng-template>
 </ion-modal>
 
-<!-- 🔥 MODAL MANUTENÇÃO -->
+<!-- MODAL MANUTENÇÃO -->
 <ion-modal [isOpen]="modalManutencaoAberto" (didDismiss)="fecharModais()">
   <ng-template>
 
