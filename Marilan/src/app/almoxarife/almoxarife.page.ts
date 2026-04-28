@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { ToastController } from '@ionic/angular';
+import { HttpClient } from '@angular/common/http';
 
 export interface Manutentor {
   nome: string;
@@ -43,120 +44,44 @@ export class AlmoxarifePage implements OnInit {
 
   // ── Dados ──────────────────────────────────────────────
   ferramentas: Ferramenta[] = [
-    {
-      id: 1,
-      nome: 'Chave de Fenda Phillips',
-      codigo: 'CFP-001',
-      status: 'disponivel',
-      quantidade: 5,
-      descricao: 'Chave de fenda Phillips tamanho 2, cabo emborrachado antiderrapante.',
-      localizacao: 'Prateleira A1',
-    },
-    {
-      id: 2,
-      nome: 'Alicate Universal',
-      codigo: 'ALU-002',
-      status: 'em_uso',
-      quantidade: 3,
-      descricao: 'Alicate universal 8" com cabo isolado 1000V.',
-      localizacao: 'Prateleira A2',
-      manutentor: {
-        nome: 'Carlos Silva',
-        area: 'ELE',
-        dataRetirada: new Date(Date.now() - 1000 * 60 * 95), // ~1h35min atrás
-      },
-    },
-    {
-      id: 3,
-      nome: 'Multímetro Digital',
-      codigo: 'MTD-003',
-      status: 'em_uso',
-      quantidade: 2,
-      descricao: 'Multímetro digital com medição de tensão AC/DC, corrente e resistência.',
-      localizacao: 'Armário B3',
-      manutentor: {
-        nome: 'João Pereira',
-        area: 'ELE',
-        dataRetirada: new Date(Date.now() - 1000 * 60 * 30), // ~30min atrás
-      },
-    },
-    {
-      id: 4,
-      nome: 'Chave Inglesa 12"',
-      codigo: 'CHI-004',
-      status: 'manutencao',
-      quantidade: 2,
-      descricao: 'Chave inglesa ajustável 12 polegadas, aço cromo vanádio.',
-      localizacao: 'Prateleira C1',
-    },
-    {
-      id: 5,
-      nome: 'Furadeira de Impacto',
-      codigo: 'FUI-005',
-      status: 'disponivel',
-      quantidade: 1,
-      descricao: 'Furadeira de impacto 750W, mandril 13mm, bivolt.',
-      localizacao: 'Armário D2',
-    },
-    {
-      id: 6,
-      nome: 'Torquímetro',
-      codigo: 'TRQ-006',
-      status: 'em_uso',
-      quantidade: 1,
-      descricao: 'Torquímetro de estalo 1/2", range 28-210 N.m.',
-      localizacao: 'Armário B1',
-      manutentor: {
-        nome: 'André Oliveira',
-        area: 'MEC',
-        dataRetirada: new Date(Date.now() - 1000 * 60 * 200), // ~3h20min atrás
-      },
-    },
-    {
-      id: 7,
-      nome: 'Esmerilhadeira Angular',
-      codigo: 'ESM-007',
-      status: 'disponivel',
-      quantidade: 2,
-      descricao: 'Esmerilhadeira angular 4.5" 820W com proteção lateral.',
-      localizacao: 'Prateleira E3',
-    },
-    {
-      id: 8,
-      nome: 'Chave de Grifo',
-      codigo: 'CHG-008',
-      status: 'em_uso',
-      quantidade: 2,
-      descricao: 'Chave de grifo 10" para tubulações, aço forjado.',
-      localizacao: 'Prateleira A3',
-      manutentor: {
-        nome: 'Ricardo Souza',
-        area: 'MME',
-        dataRetirada: new Date(Date.now() - 1000 * 60 * 15), // ~15min atrás
-      },
-    },
-    {
-      id: 9,
-      nome: 'Manômetro de Pressão',
-      codigo: 'MNM-009',
-      status: 'manutencao',
-      quantidade: 1,
-      descricao: 'Manômetro analógico 0-16 bar, conexão 1/4" NPT.',
-      localizacao: 'Armário F1',
-    },
   ];
+ferramentasFiltradas: Ferramenta[] = [];
+carregando = false;
 
-  ferramentasFiltradas: Ferramenta[] = [];
+private API = 'http://localhost:3000/api';
 
-  constructor(
-    private router: Router,
-    private toastCtrl: ToastController,
-  ) {}
+constructor(
+  private router: Router,
+  private http: HttpClient,
+  private toastCtrl: ToastController,
+) {}
 
-  ngOnInit() {
-    this.ferramentasFiltradas = [...this.ferramentas];
-  }
+ngOnInit() {
+  this.carregarFerramentas();
+}
 
+carregarFerramentas() {
+  this.carregando = true;
+  this.http.get<any[]>(`${this.API}/ferramentas`).subscribe({
+    next: (dados) => {
+      this.ferramentas = dados.map(f => ({
+        id:         f.id,
+        codigo:     f.codigo,
+        nome:       f.nome,
+        descricao:  f.nome,
+        quantidade: f.quantidade_estoque,
+        status:     (f.estoque_final > 0 ? 'disponivel' : 'em_uso') as any,
+        manutentor: undefined,
+      }));
+      this.ferramentasFiltradas = [...this.ferramentas];
+      this.carregando = false;
+    },
+    error: () => {
+      this.exibirToast('Erro ao carregar ferramentas.', 'danger');
+      this.carregando = false;
+    }
+  });
+}
   // ── Filtro ─────────────────────────────────────────────
   filtrar() {
     const termo = this.termoBusca.toLowerCase().trim();
