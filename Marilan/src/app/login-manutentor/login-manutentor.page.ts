@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { AuthService } from '../services/auth';
 
 @Component({
   selector: 'app-login-manutentor',
@@ -16,7 +17,7 @@ export class LoginManutentorPage implements OnInit {
   carregando: boolean = false;
   erroLogin: string = '';
 
-  constructor(private router: Router) {}
+  constructor(private router: Router, private authService: AuthService) {}
 
   ngOnInit() {}
 
@@ -45,15 +46,17 @@ export class LoginManutentorPage implements OnInit {
 
     this.carregando = true;
 
-    // Simulação de autenticação — substitua pela chamada real à API
-    setTimeout(() => {
-      this.carregando = false;
-      // Credenciais de exemplo para teste
-      if (this.cpf === '000.000.000-00' && this.senha === '1234') {
+    this.authService.loginManutentor(this.cpf, this.senha, this.oficina).subscribe({
+      next: (res) => {
+        this.carregando = false;
+        // Salva o usuário na sessão
+        sessionStorage.setItem('usuario', JSON.stringify(res.usuario));
         this.router.navigateByUrl('/manutentores', { replaceUrl: true });
-      } else {
-        this.erroLogin = 'CPF ou senha incorretos.';
+      },
+      error: (err) => {
+        this.carregando = false;
+        this.erroLogin = err.error?.erro || 'CPF, senha ou oficina incorretos.';
       }
-    }, 1000);
+    });
   }
 }
