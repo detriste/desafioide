@@ -59,13 +59,22 @@
         <div style="margin-top:10px; display:flex; gap:6px; flex-wrap:wrap;">
 
           <!-- DISPONÍVEL -->
-          <ion-button
-            *ngIf="f.status==='disponivel'"
-            size="small"
-            color="success"
-            (click)="abrirModalRetirada(f)">
-            Retirar
-          </ion-button>
+<ion-button
+  *ngIf="f.status==='disponivel'"
+  size="small"
+  color="success"
+  (click)="abrirModalRetirada(f); $event.stopPropagation()">
+  Retirar
+</ion-button>
+
+<ion-button
+  *ngIf="f.status==='disponivel'"
+  size="small"
+  color="danger"
+  fill="outline"
+  (click)="abrirModalManutencao(f); $event.stopPropagation()">
+  Manutenção
+</ion-button>
 
           <!-- EM USO -->
           <ion-button
