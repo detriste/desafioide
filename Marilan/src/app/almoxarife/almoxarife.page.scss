@@ -323,3 +323,14 @@ ion-modal.modal-sheet {
     color: var(--ion-color-danger-shade);
   }
 }
+// ── Fix: Toast não bloquear cliques ──────────────────────────────────────────
+ion-toast {
+  pointer-events: none !important;
+  z-index: 9999;
+}
+
+ion-toast .toast-wrapper {
+  pointer-events: auto;
+  border-radius: 14px;
+  margin: 0 12px 12px;
+}

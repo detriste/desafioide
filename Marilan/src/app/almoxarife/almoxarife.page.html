@@ -19,11 +19,12 @@
       placeholder="Buscar ferramenta..."
       debounce="200">
     </ion-searchbar>
+
     <div class="filtros">
-      <ion-chip [color]="filtroStatus==='todos'      ? 'secondary' : 'medium'" (click)="setFiltro('todos')">Todos</ion-chip>
-      <ion-chip [color]="filtroStatus==='disponivel' ? 'success'   : 'medium'" (click)="setFiltro('disponivel')">Disponível</ion-chip>
-      <ion-chip [color]="filtroStatus==='em_uso'     ? 'warning'   : 'medium'" (click)="setFiltro('em_uso')">Em Uso</ion-chip>
-      <ion-chip [color]="filtroStatus==='manutencao' ? 'danger'    : 'medium'" (click)="setFiltro('manutencao')">Manutenção</ion-chip>
+      <ion-chip [color]="filtroStatus==='todos' ? 'secondary' : 'medium'" (click)="setFiltro('todos')">Todos</ion-chip>
+      <ion-chip [color]="filtroStatus==='disponivel' ? 'success' : 'medium'" (click)="setFiltro('disponivel')">Disponível</ion-chip>
+      <ion-chip [color]="filtroStatus==='em_uso' ? 'warning' : 'medium'" (click)="setFiltro('em_uso')">Em Uso</ion-chip>
+      <ion-chip [color]="filtroStatus==='manutencao' ? 'danger' : 'medium'" (click)="setFiltro('manutencao')">Manutenção</ion-chip>
     </div>
   </div>
 
@@ -31,19 +32,21 @@
 
   <!-- Lista -->
   <ion-list lines="none" class="lista-ferramentas">
+
     <ion-card
       *ngFor="let f of ferramentasFiltradas"
       class="card-ferramenta"
       [class.em-uso]="f.status==='em_uso'"
-      [class.manutencao]="f.status==='manutencao'"
-      (click)="abrirModal(f)">
+      [class.manutencao]="f.status==='manutencao'">
 
-      <ion-card-header>
+      <!-- 🔹 Header clicável (abre modal) -->
+      <ion-card-header (click)="abrirModal(f)">
         <div class="card-topo">
           <div class="info-principal">
             <ion-card-title>{{ f.nome }}</ion-card-title>
             <ion-card-subtitle>Cód: {{ f.codigo }}</ion-card-subtitle>
           </div>
+
           <div class="topo-direita">
             <ion-badge [color]="getBadgeColor(f.status)" class="badge-status">
               {{ getStatusLabel(f.status) }}
@@ -54,6 +57,7 @@
       </ion-card-header>
 
       <ion-card-content>
+
         <p class="descricao">{{ f.descricao }}</p>
 
         <div class="info-grid">
@@ -61,229 +65,82 @@
             <ion-icon name="layers-outline"></ion-icon>
             <span>Qtd: <strong>{{ f.quantidade }}</strong></span>
           </div>
+
           <div class="info-item" *ngIf="f.localizacao">
             <ion-icon name="location-outline"></ion-icon>
             <span>{{ f.localizacao }}</span>
           </div>
         </div>
 
-        <!-- Em uso: info do manutentor -->
+        <!-- 🔸 Info quando está em uso -->
         <div class="bloco-em-uso" *ngIf="f.status==='em_uso' && f.manutentor">
           <div class="divider-uso"></div>
+
           <div class="uso-header">
             <ion-icon name="person-circle-outline" color="warning"></ion-icon>
             <span class="uso-titulo">Em uso por:</span>
           </div>
+
           <div class="uso-info">
             <div class="uso-detalhe">
               <ion-icon name="person-outline"></ion-icon>
               <span>{{ f.manutentor.nome }}</span>
             </div>
+
             <div class="uso-detalhe">
               <ion-icon name="business-outline"></ion-icon>
               <span>Oficina: <strong>{{ f.manutentor.area }}</strong></span>
             </div>
+
             <div class="uso-detalhe" *ngIf="f.manutentor.dataRetirada">
               <ion-icon name="time-outline"></ion-icon>
-              <span>Retirada: {{ f.manutentor.dataRetirada | date:'dd/MM/yyyy HH:mm' }}</span>
+              <span>
+                Retirada: {{ f.manutentor.dataRetirada | date:'dd/MM/yyyy HH:mm' }}
+              </span>
             </div>
           </div>
+        </div>
+
+        <!-- 🔥 AÇÕES DIRETAS -->
+        <div class="acoes-card">
+
+          <!-- Disponível -->
+          <ion-button
+            *ngIf="f.status === 'disponivel'"
+            size="small"
+            color="success"
+            (click)="abrirModal(f); $event.stopPropagation()">
+            Retirar
+          </ion-button>
+
+          <!-- Em uso -->
+          <ion-button
+            *ngIf="f.status === 'em_uso'"
+            size="small"
+            color="warning"
+            (click)="ferramentaSelecionada = f; confirmarDevolucao(); $event.stopPropagation()">
+            Devolver
+          </ion-button>
+
+          <!-- Manutenção -->
+          <ion-button
+            *ngIf="f.status === 'manutencao'"
+            size="small"
+            color="danger"
+            (click)="ferramentaSelecionada = f; confirmarManutencaoConcluida(); $event.stopPropagation()">
+            Concluir
+          </ion-button>
+
         </div>
 
       </ion-card-content>
     </ion-card>
 
+    <!-- Empty -->
     <div class="empty-state" *ngIf="ferramentasFiltradas.length===0">
       <ion-icon name="search-outline"></ion-icon>
       <p>Nenhuma ferramenta encontrada</p>
     </div>
+
   </ion-list>
 </ion-content>
-
-
-<!-- ═══════════════════════════════════════════════════════
-     MODAL: COLOCAR EM USO (disponivel → em_uso)
-════════════════════════════════════════════════════════ -->
-<ion-modal [isOpen]="modalDisponivel" (didDismiss)="fecharModais()" class="modal-sheet">
-  <ng-template>
-    <ion-header>
-      <ion-toolbar color="success">
-        <ion-title>Registrar Retirada</ion-title>
-        <ion-buttons slot="end">
-          <ion-button (click)="fecharModais()">
-            <ion-icon name="close-outline" slot="icon-only"></ion-icon>
-          </ion-button>
-        </ion-buttons>
-      </ion-toolbar>
-    </ion-header>
-    <ion-content class="modal-content">
-      <div class="modal-body" *ngIf="ferramentaSelecionada">
-
-        <div class="modal-ferramenta-info">
-          <ion-icon name="construct-outline" color="success"></ion-icon>
-          <div>
-            <p class="modal-nome">{{ ferramentaSelecionada.nome }}</p>
-            <p class="modal-codigo">{{ ferramentaSelecionada.codigo }}</p>
-          </div>
-        </div>
-
-        <div class="modal-form">
-          <div class="form-label">Nome do Manutentor *</div>
-          <ion-item lines="full" class="form-item">
-            <ion-input
-              [(ngModel)]="novoManutentor.nome"
-              placeholder="Ex: Carlos Silva"
-              type="text">
-            </ion-input>
-          </ion-item>
-
-          <div class="form-label">Oficina *</div>
-          <ion-item lines="full" class="form-item">
-            <ion-select [(ngModel)]="novoManutentor.area" placeholder="Selecione a oficina">
-              <ion-select-option value="MME">MME</ion-select-option>
-              <ion-select-option value="MEC">MEC</ion-select-option>
-              <ion-select-option value="ELE">ELE</ion-select-option>
-            </ion-select>
-          </ion-item>
-
-          <div class="erro-modal" *ngIf="erroModal">
-            <ion-icon name="alert-circle-outline"></ion-icon>
-            {{ erroModal }}
-          </div>
-
-          <ion-button
-            expand="block"
-            color="success"
-            class="btn-modal"
-            (click)="confirmarEmUso()">
-            <ion-icon name="checkmark-circle-outline" slot="start"></ion-icon>
-            Confirmar Retirada
-          </ion-button>
-        </div>
-
-      </div>
-    </ion-content>
-  </ng-template>
-</ion-modal>
-
-
-<!-- ═══════════════════════════════════════════════════════
-     MODAL: DEVOLUÇÃO (em_uso → disponivel)
-════════════════════════════════════════════════════════ -->
-<ion-modal [isOpen]="modalEmUso" (didDismiss)="fecharModais()" class="modal-sheet">
-  <ng-template>
-    <ion-header>
-      <ion-toolbar color="warning">
-        <ion-title>Ferramenta em Uso</ion-title>
-        <ion-buttons slot="end">
-          <ion-button (click)="fecharModais()">
-            <ion-icon name="close-outline" slot="icon-only"></ion-icon>
-          </ion-button>
-        </ion-buttons>
-      </ion-toolbar>
-    </ion-header>
-    <ion-content class="modal-content">
-      <div class="modal-body" *ngIf="ferramentaSelecionada">
-
-        <div class="modal-ferramenta-info">
-          <ion-icon name="construct-outline" color="warning"></ion-icon>
-          <div>
-            <p class="modal-nome">{{ ferramentaSelecionada.nome }}</p>
-            <p class="modal-codigo">{{ ferramentaSelecionada.codigo }}</p>
-          </div>
-        </div>
-
-        <div class="detalhe-uso-modal" *ngIf="ferramentaSelecionada.manutentor">
-          <div class="detalhe-row">
-            <ion-icon name="person-outline"></ion-icon>
-            <div>
-              <span class="detalhe-label">Manutentor</span>
-              <span class="detalhe-valor">{{ ferramentaSelecionada.manutentor.nome }}</span>
-            </div>
-          </div>
-          <div class="detalhe-row">
-            <ion-icon name="business-outline"></ion-icon>
-            <div>
-              <span class="detalhe-label">Oficina</span>
-              <span class="detalhe-valor">{{ ferramentaSelecionada.manutentor.area }}</span>
-            </div>
-          </div>
-          <div class="detalhe-row" *ngIf="ferramentaSelecionada.manutentor.dataRetirada">
-            <ion-icon name="time-outline"></ion-icon>
-            <div>
-              <span class="detalhe-label">Retirada em</span>
-              <span class="detalhe-valor">
-                {{ ferramentaSelecionada.manutentor.dataRetirada | date:'dd/MM/yyyy HH:mm' }}
-              </span>
-            </div>
-          </div>
-          <div class="detalhe-row" *ngIf="ferramentaSelecionada.manutentor.dataRetirada">
-            <ion-icon name="hourglass-outline"></ion-icon>
-            <div>
-              <span class="detalhe-label">Tempo em uso</span>
-              <span class="detalhe-valor tempo-uso">
-                {{ calcularTempo(ferramentaSelecionada.manutentor.dataRetirada) }}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <ion-button
-          expand="block"
-          color="success"
-          class="btn-modal"
-          (click)="confirmarDevolucao()">
-          <ion-icon name="return-down-back-outline" slot="start"></ion-icon>
-          Ferramenta Devolvida
-        </ion-button>
-
-      </div>
-    </ion-content>
-  </ng-template>
-</ion-modal>
-
-
-<!-- ═══════════════════════════════════════════════════════
-     MODAL: MANUTENÇÃO CONCLUÍDA (manutencao → disponivel)
-════════════════════════════════════════════════════════ -->
-<ion-modal [isOpen]="modalManutencao" (didDismiss)="fecharModais()" class="modal-sheet">
-  <ng-template>
-    <ion-header>
-      <ion-toolbar color="danger">
-        <ion-title>Ferramenta em Manutenção</ion-title>
-        <ion-buttons slot="end">
-          <ion-button (click)="fecharModais()">
-            <ion-icon name="close-outline" slot="icon-only"></ion-icon>
-          </ion-button>
-        </ion-buttons>
-      </ion-toolbar>
-    </ion-header>
-    <ion-content class="modal-content">
-      <div class="modal-body" *ngIf="ferramentaSelecionada">
-
-        <div class="modal-ferramenta-info">
-          <ion-icon name="construct-outline" color="danger"></ion-icon>
-          <div>
-            <p class="modal-nome">{{ ferramentaSelecionada.nome }}</p>
-            <p class="modal-codigo">{{ ferramentaSelecionada.codigo }}</p>
-          </div>
-        </div>
-
-        <div class="aviso-manutencao">
-          <ion-icon name="warning-outline" color="danger"></ion-icon>
-          <p>Esta ferramenta está em manutenção e indisponível para uso no momento.</p>
-        </div>
-
-        <ion-button
-          expand="block"
-          color="success"
-          class="btn-modal"
-          (click)="confirmarManutencaoConcluida()">
-          <ion-icon name="checkmark-done-outline" slot="start"></ion-icon>
-          Manutenção Concluída
-        </ion-button>
-
-      </div>
-    </ion-content>
-  </ng-template>
-</ion-modal>
