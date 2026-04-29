@@ -124,31 +124,52 @@ oficinaSolicitante = '';
     }
   }
 
-  // ── Ferramentas ───────────────────────────────────────────────────────────
   carregarFerramentas() {
     this.http.get<any[]>(`${this.API}/ferramentas`).subscribe({
       next: (dados) => {
-        this.ferramentas = dados.map(f => ({
+        const novas = dados.map(f => ({
           id: f.id,
           codigo: f.codigo,
           nome: f.nome,
           descricao: f.descricao ?? f.nome,
           quantidade: f.quantidade_estoque,
           status: f.status,
-          temAtencao: false,
+          temAtencao: this.ferramentas.find(x => x.id === f.id)?.temAtencao ?? false,
           manutentor: f.usuario_nome ? {
             nome: f.usuario_nome,
-            cpf:          f.usuario_cpf,
+            cpf: f.usuario_cpf,
             area: f.usuario_area,
             ordemServico: f.observacao?.replace('OS: ', ''),
             dataRetirada: f.data_retirada ? new Date(f.data_retirada) : undefined,
           } : undefined,
         }));
-      this.filtrar();
-        this.verificarAtencoes();
 
+        // Atualiza só os campos que mudaram, sem recriar o array inteiro
+        novas.forEach(nova => {
+          const existente = this.ferramentas.find(x => x.id === nova.id);
+          if (existente) {
+            existente.status = nova.status;
+            existente.manutentor = nova.manutentor;
+            existente.quantidade = nova.quantidade;
+          }
+        });
+
+        // Adiciona ferramentas novas que ainda não existem
+        novas.forEach(nova => {
+          if (!this.ferramentas.find(x => x.id === nova.id)) {
+            this.ferramentas.push(nova);
+          }
+        });
+
+        // Remove ferramentas que sumiram do servidor
+        this.ferramentas = this.ferramentas.filter(f =>
+          novas.find(n => n.id === f.id)
+        );
+
+        this.filtrar();
+        this.verificarAtencoes();
       },
-      error: () => this.exibirToast('Erro ao carregar ferramentas.', 'danger')
+      error: () => {}
     });
   }
 
@@ -440,7 +461,6 @@ abrirVerAtencoes(f: Ferramenta) {
 
   // ── Fechar todos os modais ────────────────────────────────────────────────
  fecharModais() {
-    this.recarregarTudo();
     this.modalAtencaoAberto = false;
     this.modalVerAtencaoAberto = false;
     this.modalTrocaAberto = false;
