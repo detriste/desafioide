@@ -113,9 +113,18 @@ oficinaSolicitante = '';
     const raw = sessionStorage.getItem('usuario');
     if (raw) this.usuarioLogado = JSON.parse(raw);
     this.recarregarTudo();
-    this.intervaloAtualizacao = setInterval(() => {
-      this.recarregarTudo();
-    }, 5000);
+   this.intervaloAtualizacao = setInterval(() => {
+  const algumModalAberto =
+    this.modalAtencaoAberto ||
+    this.modalVerAtencaoAberto ||
+    this.modalTrocaAberto ||
+    this.modalTrocasPendentesAberto ||
+    this.modalOsSolicitanteAberto;
+
+  if (!algumModalAberto) {
+    this.recarregarTudo();
+  }
+}, 5000);
   }
 
   ngOnDestroy() {

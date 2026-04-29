@@ -48,12 +48,17 @@
         <p><strong>Status:</strong> {{ getStatusLabel(f.status) }}</p>
 
         <div *ngIf="f.status === 'em_uso' && f.manutentor">
-          <p><strong>Usuário:</strong> {{ f.manutentor.nome }}</p>
-          <p><strong>Área:</strong> {{ f.manutentor.area }}</p>
-          <p *ngIf="f.manutentor.ordemServico">
-            <strong>OS:</strong> {{ f.manutentor.ordemServico }}
-          </p>
-        </div>
+  <p><strong>Usuário:</strong> {{ f.manutentor.nome }}</p>
+  <p><strong>Área:</strong> {{ f.manutentor.area }}</p>
+  <p *ngIf="f.manutentor.ordemServico">
+    <strong>OS:</strong> {{ f.manutentor.ordemServico }}
+  </p>
+</div>
+
+<div *ngIf="f.status === 'manutencao' && f.observacao" class="bloco-manutencao">
+  <ion-icon name="construct-outline" color="danger"></ion-icon>
+  <span>{{ f.observacao }}</span>
+</div>
 
         <!-- BOTÕES -->
         <div style="margin-top:10px; display:flex; gap:6px; flex-wrap:wrap;">

@@ -21,6 +21,7 @@ export interface Ferramenta {
   quantidade: number;
   descricao: string;
   localizacao?: string;
+  observacao?: string; 
   manutentor?: Manutentor;
 }
 
@@ -82,6 +83,7 @@ export class AlmoxarifePage implements OnInit {
     this.http.get<any[]>(`${this.API}/ferramentas`).subscribe({
       next: (dados) => {
         this.ferramentas = dados.map(f => ({
+          observacao: f.observacao ?? undefined,
           id:         f.id,
           codigo:     f.codigo,
           nome:       f.nome,
@@ -209,7 +211,7 @@ export class AlmoxarifePage implements OnInit {
       error: (err) => { this.erroModal = err.error?.erro || 'Erro na manutenção.'; this.salvando = false; }
     });
   }
-
+observacao?: string;
   executarDevolucao(f: Ferramenta) {
     this.ferramentaSelecionada = f;
     this.http.post(`${this.API}/ferramentas/${f.id}/devolver`, {}).subscribe({
