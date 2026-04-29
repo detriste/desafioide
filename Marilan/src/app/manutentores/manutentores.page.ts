@@ -9,6 +9,7 @@ import { HttpClient } from '@angular/common/http';
 export interface Manutentor {
   nome: string;
   area: string;
+  cpf?: string;
   ordemServico?: string;
   dataRetirada?: Date;
 }
@@ -68,6 +69,9 @@ export class ManutentoresPage implements OnInit {
   descricaoAtencao = '';
   erroModal = '';
   salvando = false;
+  cpfSolicitante = '';
+nomeSolicitante = '';
+oficinaSolicitante = '';
 
   // ── Atenções ──────────────────────────────────────────────────────────────
   atencoesDaFerramenta: RegistroAtencao[] = [];
@@ -77,7 +81,7 @@ export class ManutentoresPage implements OnInit {
   trocaDestinatarioNome = '';
   trocaDestinatarioArea = '';
   erroCpfTroca = '';
-
+  areaDeUso = '';
   // ── Troca — receber (pendentes) ───────────────────────────────────────────
   trocasPendentes: SolicitacaoTroca[] = [];
   trocaSelecionada: SolicitacaoTroca | null = null;
@@ -124,6 +128,7 @@ export class ManutentoresPage implements OnInit {
           temAtencao: false,
           manutentor: f.usuario_nome ? {
             nome: f.usuario_nome,
+            cpf:          f.usuario_cpf,
             area: f.usuario_area,
             ordemServico: f.observacao?.replace('OS: ', ''),
             dataRetirada: f.data_retirada ? new Date(f.data_retirada) : undefined,
@@ -187,6 +192,10 @@ export class ManutentoresPage implements OnInit {
       next: () => {
         this.ferramentaSelecionada!.temAtencao = true;
         this.fecharModais();
+        this.cpfSolicitante = '';
+this.nomeSolicitante = '';
+this.oficinaSolicitante = '';
+        this.areaDeUso = '';
         this.exibirToast('Ponto de atenção registrado!', 'warning');
       },
       error: (err) => {
@@ -206,17 +215,48 @@ export class ManutentoresPage implements OnInit {
     });
   }
 
+  buscarSolicitantePorCPF() {
+    const cpf = this.cpfSolicitante?.trim();
+    if (!cpf) return;
+    this.erroModal = '';
+  
+    // Bloqueia troca consigo mesmo
+    if (cpf === this.ferramentaSelecionada?.manutentor?.cpf ||
+        this.ferramentaSelecionada?.manutentor?.nome === this.usuarioLogado?.nome) {
+      this.erroModal = 'Você não pode solicitar uma troca consigo mesmo.';
+      this.nomeSolicitante = '';
+      this.oficinaSolicitante = '';
+      return;
+    }
+  
+    this.http.get<any>(`${this.API}/usuarios/cpf/${cpf}`).subscribe({
+      next: (res) => {
+        // Bloqueia se o CPF buscado for o mesmo do dono atual da ferramenta
+        if (res.nome === this.ferramentaSelecionada?.manutentor?.nome) {
+          this.erroModal = 'Você não pode solicitar uma troca consigo mesmo.';
+          this.nomeSolicitante = '';
+          this.oficinaSolicitante = '';
+          return;
+        }
+        this.nomeSolicitante = res.nome;
+        this.oficinaSolicitante = res.area;
+      },
+      error: () => {
+        this.erroModal = 'CPF não encontrado.';
+        this.nomeSolicitante = '';
+        this.oficinaSolicitante = '';
+      }
+    });
+  }
   // ── Solicitar Troca ───────────────────────────────────────────────────────
   abrirModalTroca(f: Ferramenta) {
     this.ferramentaSelecionada = f;
-    this.trocaCpfDestinatario = '';
-    this.trocaDestinatarioNome = '';
-    this.trocaDestinatarioArea = '';
-    this.erroCpfTroca = '';
+    this.cpfSolicitante = '';
+    this.nomeSolicitante = '';
+    this.oficinaSolicitante = '';
     this.erroModal = '';
     this.modalTrocaAberto = true;
   }
-
   buscarDestinatarioPorCPF() {
     const cpf = this.trocaCpfDestinatario?.trim();
     if (!cpf) return;
@@ -235,18 +275,19 @@ export class ManutentoresPage implements OnInit {
   }
 
   confirmarSolicitacaoTroca() {
-    if (!this.trocaDestinatarioNome.trim()) {
-      this.erroModal = 'CPF não encontrado ou não preenchido.';
+    if (!this.nomeSolicitante.trim()) {
+      this.erroModal = 'Informe seu CPF primeiro.';
       return;
     }
+    const f = this.ferramentaSelecionada!;
     this.salvando = true;
     this.http.post(`${this.API}/trocas/solicitar`, {
-      ferramenta_id: this.ferramentaSelecionada!.id,
-      ferramenta_nome: this.ferramentaSelecionada!.nome,
-      solicitante_nome: this.usuarioLogado?.nome ?? '',
-      solicitante_area: this.usuarioLogado?.oficina ?? '',
-      destinatario_nome: this.trocaDestinatarioNome.trim(),
-      destinatario_area: this.trocaDestinatarioArea,
+      ferramenta_id:     f.id,
+      ferramenta_nome:   f.nome,
+      solicitante_nome:  this.nomeSolicitante,
+      solicitante_area:  this.oficinaSolicitante,
+      destinatario_nome: f.manutentor?.nome ?? '',
+      destinatario_area: f.manutentor?.area ?? '',
     }).subscribe({
       next: () => {
         this.fecharModais();
@@ -258,7 +299,6 @@ export class ManutentoresPage implements OnInit {
       }
     });
   }
-
   // ── Trocas Pendentes (destinatário recebe) ────────────────────────────────
   carregarTrocasPendentes() {
     if (!this.usuarioLogado) return;
@@ -268,6 +308,17 @@ export class ManutentoresPage implements OnInit {
       next: (dados) => this.trocasPendentes = dados,
       error: () => {}
     });
+  }
+
+  formatarCpf(event: any, campo: 'cpfSolicitante' | 'trocaCpfSolicitante') {
+    let valor = event.target.value.replace(/\D/g, '');
+    if (valor.length <= 11) {
+      valor = valor
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+    }
+    this[campo] = valor;
   }
 
   abrirTrocasPendentes() {
@@ -339,12 +390,8 @@ export class ManutentoresPage implements OnInit {
   }
 
   confirmarOsSolicitante() {
-    if (!this.trocaCpfSolicitante.trim()) {
-      this.erroModal = 'Informe o CPF.';
-      return;
-    }
-    if (!this.solicitanteNome.trim()) {
-      this.erroModal = 'CPF não encontrado. Verifique e tente novamente.';
+    if (!this.areaDeUso.trim()) {
+      this.erroModal = 'Informe a área de uso.';
       return;
     }
     if (!this.osSolicitante.trim()) {
@@ -353,11 +400,11 @@ export class ManutentoresPage implements OnInit {
     }
     const t = this.trocaAceitaSelecionada!;
     this.salvando = true;
-
+  
     this.http.post(`${this.API}/trocas/${t.id}/concluir`, {
-      usuario_cpf:   this.trocaCpfSolicitante,
-      usuario_nome:  this.solicitanteNome,
-      usuario_area:  this.solicitanteArea,
+      usuario_cpf:   this.usuarioLogado?.cpf ?? null,
+      usuario_nome:  this.usuarioLogado?.nome ?? '',
+      usuario_area:  this.areaDeUso.trim(),
       ordem_servico: this.osSolicitante.trim()
     }).subscribe({
       next: () => {
