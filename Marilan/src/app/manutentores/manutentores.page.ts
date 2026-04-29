@@ -158,7 +158,17 @@ oficinaSolicitante = '';
     this.carregarTrocasAceitas();
   }
 
-  verificarAtencoes() {
+ verificarAtencoes() {
+    const emUso = this.ferramentas.filter(f => f.status === 'em_uso');
+    emUso.forEach(f => {
+      this.http.get<RegistroAtencao[]>(`${this.API}/ferramentas/${f.id}/atencoes`).subscribe({
+        next: (lista) => {
+          f.temAtencao = lista.length > 0;
+          this.filtrar();
+        },
+        error: () => {}
+      });
+    });
   }
 
   setAba(aba: 'em_uso' | 'disponivel') {
