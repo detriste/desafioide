@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
@@ -50,7 +50,7 @@ export interface RegistroAtencao {
   standalone: true,
   imports: [CommonModule, FormsModule, IonicModule]
 })
-export class ManutentoresPage implements OnInit {
+export class ManutentoresPage implements OnInit, OnDestroy {
 
   abaAtiva: 'em_uso' | 'disponivel' = 'em_uso';
 
@@ -101,7 +101,7 @@ oficinaSolicitante = '';
   usuarioLogado: any = null;
 
   private API = 'http://localhost:3000/api';
-  private ferramentasCached = false;
+
 
   constructor(
     private router: Router,
@@ -112,10 +112,16 @@ oficinaSolicitante = '';
   ngOnInit() {
     const raw = sessionStorage.getItem('usuario');
     if (raw) this.usuarioLogado = JSON.parse(raw);
-    this.carregarFerramentas();
-    this.carregarTrocasPendentes();
-    this.carregarTrocasAceitas();
-    
+    this.recarregarTudo();
+    this.intervaloAtualizacao = setInterval(() => {
+      this.recarregarTudo();
+    }, 5000);
+  }
+
+  ngOnDestroy() {
+    if (this.intervaloAtualizacao) {
+      clearInterval(this.intervaloAtualizacao);
+    }
   }
 
   // ── Ferramentas ───────────────────────────────────────────────────────────
@@ -139,28 +145,20 @@ oficinaSolicitante = '';
           } : undefined,
         }));
       this.filtrar();
-        if (!this.ferramentasCached) {
-          this.ferramentasCached = true;
-          this.verificarAtencoes();
-        }
-
+        this.verificarAtencoes();
 
       },
       error: () => this.exibirToast('Erro ao carregar ferramentas.', 'danger')
     });
   }
 
+  recarregarTudo() {
+    this.carregarFerramentas();
+    this.carregarTrocasPendentes();
+    this.carregarTrocasAceitas();
+  }
+
   verificarAtencoes() {
-    const emUso = this.ferramentas.filter(f => f.status === 'em_uso');
-    emUso.forEach(f => {
-      this.http.get<RegistroAtencao[]>(`${this.API}/ferramentas/${f.id}/atencoes`).subscribe({
-        next: (lista) => {
-          f.temAtencao = lista.length > 0;
-          this.filtrar();
-        },
-        error: () => {}
-      });
-    });
   }
 
   setAba(aba: 'em_uso' | 'disponivel') {
@@ -210,10 +208,11 @@ oficinaSolicitante = '';
   });
 }
 
-  abrirVerAtencoes(f: Ferramenta) {
+abrirVerAtencoes(f: Ferramenta) {
     this.ferramentaSelecionada = f;
     this.atencoesDaFerramenta = [];
     this.modalVerAtencaoAberto = true;
+    this.recarregarTudo();
     this.http.get<RegistroAtencao[]>(`${this.API}/ferramentas/${f.id}/atencoes`).subscribe({
       next: (lista) => this.atencoesDaFerramenta = lista,
       error: () => this.exibirToast('Erro ao carregar atenções.', 'danger')
@@ -296,6 +295,7 @@ oficinaSolicitante = '';
     }).subscribe({
       next: () => {
         this.fecharModais();
+        this.recarregarTudo();
         this.exibirToast('Solicitação enviada!', 'success');
       },
       error: (err) => {
@@ -327,7 +327,7 @@ oficinaSolicitante = '';
   }
 
   abrirTrocasPendentes() {
-    this.carregarTrocasPendentes();
+    this.recarregarTudo();
     this.modalTrocasPendentesAberto = true;
   }
 
@@ -429,7 +429,8 @@ oficinaSolicitante = '';
   }
 
   // ── Fechar todos os modais ────────────────────────────────────────────────
-  fecharModais() {
+ fecharModais() {
+    this.recarregarTudo();
     this.modalAtencaoAberto = false;
     this.modalVerAtencaoAberto = false;
     this.modalTrocaAberto = false;
@@ -454,7 +455,9 @@ oficinaSolicitante = '';
   }
 
  sair() {
-    this.ferramentasCached = false;
+    if (this.intervaloAtualizacao) {
+      clearInterval(this.intervaloAtualizacao);
+    }
     sessionStorage.removeItem('usuario');
     this.router.navigateByUrl('/home', { replaceUrl: true });
   }
