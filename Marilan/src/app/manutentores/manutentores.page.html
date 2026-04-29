@@ -1,13 +1,233 @@
 <ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-title>manutentores</ion-title>
+  <ion-toolbar color="primary">
+    <ion-title>Manutenção</ion-title>
+    <ion-buttons slot="end">
+      <!-- Badge de trocas pendentes -->
+      <ion-button fill="clear" (click)="abrirTrocasPendentes()">
+        <ion-icon name="swap-horizontal-outline"></ion-icon>
+        <ion-badge *ngIf="trocasPendentes.length > 0" color="danger" style="position:absolute;top:4px;right:4px;font-size:10px;">
+          {{ trocasPendentes.length }}
+        </ion-badge>
+      </ion-button>
+      <ion-button fill="clear" (click)="sair()">
+        <ion-icon name="log-out-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+
+  <!-- Abas -->
+  <ion-toolbar color="primary">
+    <div class="abas">
+      <div class="aba" [class.ativa]="abaAtiva==='em_uso'" (click)="setAba('em_uso')">
+        <ion-icon name="hammer-outline"></ion-icon> Em Uso
+      </div>
+      <div class="aba" [class.ativa]="abaAtiva==='disponivel'" (click)="setAba('disponivel')">
+        <ion-icon name="checkmark-circle-outline"></ion-icon> Disponível
+      </div>
+    </div>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">manutentores</ion-title>
-    </ion-toolbar>
-  </ion-header>
+
+  <div class="search-bar">
+    <ion-searchbar
+      [(ngModel)]="termoBusca"
+      (ionInput)="filtrar()"
+      placeholder="Buscar ferramenta...">
+    </ion-searchbar>
+  </div>
+
+  <div class="contador">{{ ferramentasFiltradas.length }} ferramenta(s)</div>
+
+  <ion-list>
+    <ion-card *ngFor="let f of ferramentasFiltradas">
+
+      <ion-card-header>
+        <ion-card-title>{{ f.nome }}</ion-card-title>
+        <ion-card-subtitle>{{ f.codigo }}</ion-card-subtitle>
+      </ion-card-header>
+
+      <ion-card-content>
+        <p>{{ f.descricao }}</p>
+
+        <!-- EM USO: mostra usuário atual -->
+        <div *ngIf="abaAtiva === 'em_uso' && f.manutentor">
+          <p><strong>Usuário:</strong> {{ f.manutentor.nome }}</p>
+          <p><strong>Área:</strong> {{ f.manutentor.area }}</p>
+          <p *ngIf="f.manutentor.ordemServico"><strong>OS:</strong> {{ f.manutentor.ordemServico }}</p>
+        </div>
+
+        <!-- DISPONÍVEL: só leitura, sem botões -->
+
+        <!-- EM USO: botões de ação -->
+        <div *ngIf="abaAtiva === 'em_uso'" style="margin-top:10px; display:flex; gap:6px; flex-wrap:wrap;">
+
+          <!-- Ponto de atenção -->
+          <ion-button
+            size="small"
+            color="danger"
+            fill="solid"
+            (click)="abrirModalAtencao(f); $event.stopPropagation()">
+            <ion-icon name="alert-circle-outline" slot="start"></ion-icon>
+            !
+          </ion-button>
+
+          <!-- Solicitar troca -->
+          <ion-button
+            size="small"
+            color="tertiary"
+            fill="outline"
+            (click)="abrirModalTroca(f); $event.stopPropagation()">
+            <ion-icon name="swap-horizontal-outline" slot="start"></ion-icon>
+            Solicitar Troca
+          </ion-button>
+
+        </div>
+
+      </ion-card-content>
+    </ion-card>
+  </ion-list>
+
 </ion-content>
+
+<!-- ── MODAL ATENÇÃO ── -->
+<ion-modal [isOpen]="modalAtencaoAberto" (didDismiss)="fecharModais()">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar color="danger">
+        <ion-title>Ponto de Atenção</ion-title>
+        <ion-buttons slot="end">
+          <ion-button (click)="fecharModais()"><ion-icon name="close-outline"></ion-icon></ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content class="ion-padding">
+      <p *ngIf="ferramentaSelecionada"><strong>{{ ferramentaSelecionada.nome }}</strong></p>
+
+      <ion-item>
+        <ion-textarea
+          label="Descreva o problema brevemente"
+          labelPlacement="stacked"
+          [(ngModel)]="descricaoAtencao"
+          rows="3">
+        </ion-textarea>
+      </ion-item>
+
+      <ion-text color="danger" *ngIf="erroModal"><p>{{ erroModal }}</p></ion-text>
+
+      <ion-button expand="block" color="danger" (click)="confirmarAtencao()" [disabled]="salvando">
+        Registrar
+      </ion-button>
+    </ion-content>
+  </ng-template>
+</ion-modal>
+
+<!-- ── MODAL SOLICITAR TROCA ── -->
+<ion-modal [isOpen]="modalTrocaAberto" (didDismiss)="fecharModais()">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar color="tertiary">
+        <ion-title>Solicitar Troca</ion-title>
+        <ion-buttons slot="end">
+          <ion-button (click)="fecharModais()"><ion-icon name="close-outline"></ion-icon></ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content class="ion-padding">
+      <p *ngIf="ferramentaSelecionada"><strong>{{ ferramentaSelecionada.nome }}</strong></p>
+
+      <ion-item>
+        <ion-input
+          label="Nome do destinatário"
+          labelPlacement="stacked"
+          [(ngModel)]="trocaDestinatarioNome">
+        </ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-select
+          label="Área do destinatário"
+          labelPlacement="stacked"
+          [(ngModel)]="trocaDestinatarioArea">
+          <ion-select-option value="MME">MME</ion-select-option>
+          <ion-select-option value="MEC">MEC</ion-select-option>
+          <ion-select-option value="ELE">ELE</ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <ion-text color="danger" *ngIf="erroModal"><p>{{ erroModal }}</p></ion-text>
+
+      <ion-button expand="block" color="tertiary" (click)="confirmarSolicitacaoTroca()" [disabled]="salvando">
+        Enviar Solicitação
+      </ion-button>
+    </ion-content>
+  </ng-template>
+</ion-modal>
+
+<!-- ── MODAL TROCAS PENDENTES ── -->
+<ion-modal [isOpen]="modalTrocasPendentesAberto" (didDismiss)="fecharModais()">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar color="warning">
+        <ion-title>Trocas Pendentes</ion-title>
+        <ion-buttons slot="end">
+          <ion-button (click)="fecharModais()"><ion-icon name="close-outline"></ion-icon></ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content class="ion-padding">
+
+      <div *ngIf="trocasPendentes.length === 0" style="text-align:center; padding: 40px; color: var(--ion-color-medium)">
+        <ion-icon name="checkmark-done-outline" style="font-size:48px; display:block; margin-bottom:8px;"></ion-icon>
+        <p>Nenhuma troca pendente.</p>
+      </div>
+
+      <ion-card *ngFor="let t of trocasPendentes">
+        <ion-card-content>
+          <p><strong>Ferramenta:</strong> {{ t.ferramenta_nome }}</p>
+          <p><strong>Solicitado por:</strong> {{ t.solicitante_nome }} ({{ t.solicitante_area }})</p>
+
+          <div style="display:flex; gap:8px; margin-top:10px;">
+            <ion-button size="small" color="success" (click)="aceitarTroca(t)">Aceitar</ion-button>
+            <ion-button size="small" color="danger" fill="outline" (click)="recusarTroca(t)">Recusar</ion-button>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+    </ion-content>
+  </ng-template>
+</ion-modal>
+
+<!-- ── MODAL FORMULÁRIO TROCA (aceitar) ── -->
+<ion-modal [isOpen]="modalFormTrocaAberto" (didDismiss)="fecharModais()">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar color="success">
+        <ion-title>Confirmar Troca</ion-title>
+        <ion-buttons slot="end">
+          <ion-button (click)="fecharModais()"><ion-icon name="close-outline"></ion-icon></ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content class="ion-padding">
+      <p *ngIf="trocaSelecionada">
+        Você está aceitando a ferramenta <strong>{{ trocaSelecionada.ferramenta_nome }}</strong>.
+      </p>
+
+      <ion-item>
+        <ion-input
+          label="Sua Ordem de Serviço"
+          labelPlacement="stacked"
+          [(ngModel)]="trocaOS">
+        </ion-input>
+      </ion-item>
+
+      <ion-text color="danger" *ngIf="erroModal"><p>{{ erroModal }}</p></ion-text>
+
+      <ion-button expand="block" color="success" (click)="confirmarFormTroca()" [disabled]="salvando">
+        Confirmar Troca
+      </ion-button>
+    </ion-content>
+  </ng-template>
+</ion-modal>

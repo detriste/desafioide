@@ -1,11 +1,9 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-
 import { IonicModule } from '@ionic/angular';
 
 import { ManutentoresPageRoutingModule } from './manutentores-routing.module';
-
 import { ManutentoresPage } from './manutentores.page';
 
 @NgModule({
@@ -13,8 +11,8 @@ import { ManutentoresPage } from './manutentores.page';
     CommonModule,
     FormsModule,
     IonicModule,
-    ManutentoresPageRoutingModule
-  ],
-  declarations: [ManutentoresPage]
+    ManutentoresPageRoutingModule,
+    ManutentoresPage // ✅ import, não declaration (standalone)
+  ]
 })
 export class ManutentoresPageModule {}
