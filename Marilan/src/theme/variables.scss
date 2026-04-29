@@ -1,13 +1,109 @@
+// ── Marilan · Tema Laranja Industrial ────────────────────────────────────────
+// Substitui: src/theme/variables.scss
 
-// https://ionicframework.com/docs/theming/
 :root {
-    /* Altere apenas os valores aqui dentro */
-    --ion-color-primary: #ff9800;
-    --ion-color-primary-rgb: 255, 152, 0;
-    --ion-color-primary-contrast: #ffffff;
-    --ion-color-primary-contrast-rgb: 255, 255, 255;
-    --ion-color-primary-shade: #e08600;
-    --ion-color-primary-tint: #ffa926;
-    
-    /* ... mantenha o restante das variáveis que já existem no arquivo ... */
-  }
+  // ── Primária: Laranja queimado ────────────────────────────────────────────
+  --ion-color-primary:         #C85A00;
+  --ion-color-primary-rgb:     200, 90, 0;
+  --ion-color-primary-contrast: #FFFFFF;
+  --ion-color-primary-contrast-rgb: 255,255,255;
+  --ion-color-primary-shade:   #A84B00;
+  --ion-color-primary-tint:    #D96B11;
+
+  // ── Secundária: Laranja claro/vivo ────────────────────────────────────────
+  --ion-color-secondary:       #F97316;
+  --ion-color-secondary-rgb:   249, 115, 22;
+  --ion-color-secondary-contrast: #FFFFFF;
+  --ion-color-secondary-contrast-rgb: 255,255,255;
+  --ion-color-secondary-shade: #D9620F;
+  --ion-color-secondary-tint:  #FA8438;
+
+  // ── Terciária: âmbar quente (alertas leves) ───────────────────────────────
+  --ion-color-tertiary:        #D97706;
+  --ion-color-tertiary-rgb:    217, 119, 6;
+  --ion-color-tertiary-contrast: #FFFFFF;
+  --ion-color-tertiary-contrast-rgb: 255,255,255;
+  --ion-color-tertiary-shade:  #B86500;
+  --ion-color-tertiary-tint:   #E88A1A;
+
+  // ── Success ───────────────────────────────────────────────────────────────
+  --ion-color-success:         #2D7A3A;
+  --ion-color-success-rgb:     45, 122, 58;
+  --ion-color-success-contrast: #FFFFFF;
+  --ion-color-success-contrast-rgb: 255,255,255;
+  --ion-color-success-shade:   #246830;
+  --ion-color-success-tint:    #3A8F49;
+
+  // ── Warning ───────────────────────────────────────────────────────────────
+  --ion-color-warning:         #D97706;
+  --ion-color-warning-rgb:     217, 119, 6;
+  --ion-color-warning-contrast: #FFFFFF;
+  --ion-color-warning-contrast-rgb: 255,255,255;
+  --ion-color-warning-shade:   #B86500;
+  --ion-color-warning-tint:    #E88A1A;
+
+  // ── Danger ────────────────────────────────────────────────────────────────
+  --ion-color-danger:          #C0392B;
+  --ion-color-danger-rgb:      192, 57, 43;
+  --ion-color-danger-contrast: #FFFFFF;
+  --ion-color-danger-contrast-rgb: 255,255,255;
+  --ion-color-danger-shade:    #A32F23;
+  --ion-color-danger-tint:     #CC4D40;
+
+  // ── Dark ─────────────────────────────────────────────────────────────────
+  --ion-color-dark:            #1C1510;
+  --ion-color-dark-rgb:        28, 21, 16;
+  --ion-color-dark-contrast:   #FFFFFF;
+  --ion-color-dark-contrast-rgb: 255,255,255;
+  --ion-color-dark-shade:      #120E0A;
+  --ion-color-dark-tint:       #2E231B;
+
+  // ── Medium ───────────────────────────────────────────────────────────────
+  --ion-color-medium:          #8C7B6E;
+  --ion-color-medium-rgb:      140, 123, 110;
+  --ion-color-medium-contrast: #FFFFFF;
+  --ion-color-medium-contrast-rgb: 255,255,255;
+  --ion-color-medium-shade:    #7A6B60;
+  --ion-color-medium-tint:     #9D8E83;
+
+  // ── Light ────────────────────────────────────────────────────────────────
+  --ion-color-light:           #F5F0EB;
+  --ion-color-light-rgb:       245, 240, 235;
+  --ion-color-light-contrast:  #1C1510;
+  --ion-color-light-contrast-rgb: 28,21,16;
+  --ion-color-light-shade:     #E8E0D8;
+  --ion-color-light-tint:      #FAF7F4;
+
+  // ── App globals ───────────────────────────────────────────────────────────
+  --ion-background-color:      #FAFAF8;
+  --ion-background-color-rgb:  250, 250, 248;
+  --ion-text-color:            #1C1510;
+  --ion-text-color-rgb:        28, 21, 16;
+  --ion-font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  // Custom tokens usados nos componentes
+  --mar-orange:         #C85A00;
+  --mar-orange-light:   #F97316;
+  --mar-orange-pale:    #FEF0E6;
+  --mar-divider:        #E8E0D8;
+  --mar-card-shadow:    0 1px 6px rgba(28,21,16,0.10);
+  --mar-radius:         10px;
+}
+
+// ── Classe auxiliar p/ toolbar com gradiente laranja ─────────────────────────
+ion-toolbar[color="primary"],
+ion-toolbar[color="secondary"] {
+  --background: linear-gradient(135deg, #C85A00 0%, #E8700A 100%);
+  --color: #FFFFFF;
+}
+
+// ── Tipografia base ───────────────────────────────────────────────────────────
+ion-card-title   { font-weight: 700; letter-spacing: -0.2px; }
+ion-card-subtitle{ color: var(--ion-color-medium); font-size: 12px; }
+
+// ── Chip base ─────────────────────────────────────────────────────────────────
+ion-chip {
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 12px;
+}

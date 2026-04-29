@@ -1,32 +1,61 @@
-<ion-header [translucent]="true">
+<ion-header>
+
+  <!-- HEADER PRINCIPAL -->
   <ion-toolbar color="primary">
-   <ion-title>Olá, {{ usuarioLogado?.nome?.split(' ')[0] }}</ion-title>
+    <div class="header-custom">
+      <span class="ola-text">
+        Olá, {{ usuarioLogado?.nome?.split(' ')[0] }}
+      </span>
+
+      <img 
+        src="https://www.grupomarilan.com.br/images/marcas/0291553001753273423.webp"
+        alt="Marilan"
+        class="logo-header"
+      />
+    </div>
+
     <ion-buttons slot="end">
-      <!-- Badge de trocas pendentes -->
       <ion-button fill="clear" (click)="abrirTrocasPendentes()">
         <ion-icon name="swap-horizontal-outline"></ion-icon>
-        <ion-badge *ngIf="trocasPendentes.length > 0" color="danger" style="position:absolute;top:4px;right:4px;font-size:10px;">
+        <ion-badge 
+          *ngIf="trocasPendentes.length > 0"
+          color="danger"
+          style="position:absolute;top:4px;right:4px;font-size:10px;">
           {{ trocasPendentes.length }}
         </ion-badge>
       </ion-button>
+
       <ion-button fill="clear" (click)="sair()">
         <ion-icon name="log-out-outline"></ion-icon>
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
 
-  <!-- Abas -->
+  <!-- ABAS -->
   <ion-toolbar color="primary">
     <div class="abas">
-      <div class="aba" [class.ativa]="abaAtiva==='em_uso'" (click)="setAba('em_uso')">
-        <ion-icon name="hammer-outline"></ion-icon> Em Uso
+
+      <div 
+        class="aba" 
+        [class.ativa]="abaAtiva==='em_uso'" 
+        (click)="setAba('em_uso')">
+        <ion-icon name="hammer-outline"></ion-icon>
+        Em uso
       </div>
-      <div class="aba" [class.ativa]="abaAtiva==='disponivel'" (click)="setAba('disponivel')">
-        <ion-icon name="checkmark-circle-outline"></ion-icon> Disponível
+
+      <div 
+        class="aba" 
+        [class.ativa]="abaAtiva==='disponivel'" 
+        (click)="setAba('disponivel')">
+        <ion-icon name="checkmark-circle-outline"></ion-icon>
+        Disponível
       </div>
+
     </div>
   </ion-toolbar>
+
 </ion-header>
+
 
 <ion-content [fullscreen]="true">
 
@@ -38,15 +67,12 @@
     </ion-searchbar>
   </div>
 
-  <div class="contador">{{ ferramentasFiltradas.length }} ferramenta(s)</div>
+  <div class="contador">
+    {{ ferramentasFiltradas.length }} ferramenta(s)
+  </div>
 
   <ion-list>
     <ion-card *ngFor="let f of ferramentasFiltradas">
-
-      <ion-card-header>
-        <ion-card-title>{{ f.nome }}</ion-card-title>
-        <ion-card-subtitle>{{ f.codigo }}</ion-card-subtitle>
-      </ion-card-header>
 
       <ion-card-content>
         <p>{{ f.descricao }}</p>
@@ -318,4 +344,3 @@
     </ion-content>
   </ng-template>
 </ion-modal>
-

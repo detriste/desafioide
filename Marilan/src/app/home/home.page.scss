@@ -1,32 +1,58 @@
+// ── Home Page · Marilan ───────────────────────────────────────────────────────
+// Substitui: src/app/home/home.page.scss
+
 .escolha-container {
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   height: 100%;
-  padding: 32px;
-  gap: 48px;
+  padding: 40px 32px;
+  gap: 56px;
+  background: #FAFAF8;
 }
 
 .logo-area {
   text-align: center;
 
   .logo-icon {
-    font-size: 80px;
-    /* Usa a variável global, assim se você mudar a cor lá, aqui muda automático */
-    color: var(--ion-color-primary); 
+    font-size: 72px;
+    color: var(--mar-orange);
+    display: block;
+    margin-bottom: 20px;
+    // Borda quadrada ao redor do ícone — toque industrial
+    padding: 16px;
+    border: 3px solid var(--mar-orange);
+    border-radius: 6px;
+    width: fit-content;
+    margin-left: auto;
+    margin-right: auto;
   }
 
   h1 {
-    font-size: 28px;
+    font-size: 26px;
     font-weight: 700;
-    margin: 12px 0 4px;
+    margin: 0 0 6px;
+    color: var(--ion-color-dark);
+    letter-spacing: -0.5px;
   }
 
   p {
-    font-size: 16px;
+    font-size: 14px;
     color: var(--ion-color-medium);
     margin: 0;
+    font-style: italic;
+  }
+
+  // Linha decorativa abaixo do subtítulo
+  &::after {
+    content: '';
+    display: block;
+    width: 48px;
+    height: 3px;
+    background: var(--mar-orange);
+    margin: 16px auto 0;
+    border-radius: 2px;
   }
 }
 
@@ -34,11 +60,27 @@
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 
   ion-button {
-    height: 56px;
-    font-size: 18px;
-    font-weight: 600;
+    height: 54px;
+    font-size: 16px;
+    font-weight: 700;
+    --border-radius: var(--mar-radius);
+    letter-spacing: 0.3px;
+
+    &:first-child {
+      --background: var(--mar-orange);
+      --background-activated: var(--ion-color-primary-shade);
+    }
+
+    &:last-child {
+      --background: transparent;
+      --color: var(--mar-orange);
+      --border-width: 2px;
+      --border-style: solid;
+      --border-color: var(--mar-orange);
+      --background-activated: var(--mar-orange-pale);
+    }
   }
 }
