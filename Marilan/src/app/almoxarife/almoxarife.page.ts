@@ -21,7 +21,7 @@ export interface Ferramenta {
   quantidade: number;
   descricao: string;
   localizacao?: string;
-  observacao?: string; 
+  observacao?: string;
   manutentor?: Manutentor;
 }
 
@@ -41,7 +41,7 @@ export class AlmoxarifePage implements OnInit {
   erroModal = '';
 
   dadosRetirada = {
-    cpf: '',
+    cracha: '',
     usuario_nome: '',
     usuario_area: '',
     ordem_servico: ''
@@ -132,8 +132,7 @@ export class AlmoxarifePage implements OnInit {
   abrirModalRetirada(f: Ferramenta) {
     this.ferramentaSelecionada = f;
     this.erroModal = '';
-    // ✅ área começa vazia para o usuário preencher manualmente
-    this.dadosRetirada = { cpf: '', usuario_nome: '', usuario_area: '', ordem_servico: '' };
+    this.dadosRetirada = { cracha: '', usuario_nome: '', usuario_area: '', ordem_servico: '' };
     this.descricaoManutencao = '';
     this.modalRetiradaAberto = true;
   }
@@ -153,25 +152,13 @@ export class AlmoxarifePage implements OnInit {
     this.salvando  = false;
   }
 
-  formatarCpfRetirada(event: any) {
-    let valor = event.target.value.replace(/\D/g, '');
-    if (valor.length <= 11) {
-      valor = valor
-        .replace(/(\d{3})(\d)/, '$1.$2')
-        .replace(/(\d{3})(\d)/, '$1.$2')
-        .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
-    }
-    this.dadosRetirada.cpf = valor;
-  }
-
-  buscarUsuarioPorCPF() {
-    const cpf = this.dadosRetirada.cpf?.trim();
-    if (!cpf) return;
+  buscarUsuarioPorCracha() {
+    const cracha = this.dadosRetirada.cracha?.trim();
+    if (!cracha) return;
 
     this.erroModal = '';
-    this.http.get<any>(`${this.API}/usuarios/cpf/${cpf}`).subscribe({
+    this.http.get<any>(`${this.API}/usuarios/cracha/${cracha}`).subscribe({
       next: (res) => {
-        // ✅ só preenche o nome automaticamente; área fica livre para o usuário
         this.dadosRetirada.usuario_nome = res.nome;
       },
       error: () => {
@@ -183,9 +170,9 @@ export class AlmoxarifePage implements OnInit {
 
   confirmarRetirada() {
     const f = this.ferramentaSelecionada!;
-    if (!this.dadosRetirada.cpf?.trim())          { this.erroModal = 'Informe o CPF.'; return; }
-    if (!this.dadosRetirada.usuario_nome?.trim()) { this.erroModal = 'CPF não encontrado.'; return; }
-    if (!this.dadosRetirada.usuario_area?.trim()) { this.erroModal = 'Informe a área.'; return; }
+    if (!this.dadosRetirada.cracha?.trim())        { this.erroModal = 'Informe o Crachá.'; return; }
+    if (!this.dadosRetirada.usuario_nome?.trim())  { this.erroModal = 'Crachá não encontrado.'; return; }
+    if (!this.dadosRetirada.usuario_area?.trim())  { this.erroModal = 'Informe a área.'; return; }
     if (!this.dadosRetirada.ordem_servico?.trim()) { this.erroModal = 'Informe a Ordem de Serviço.'; return; }
 
     this.salvando = true;
@@ -211,7 +198,7 @@ export class AlmoxarifePage implements OnInit {
       error: (err) => { this.erroModal = err.error?.erro || 'Erro na manutenção.'; this.salvando = false; }
     });
   }
-observacao?: string;
+
   executarDevolucao(f: Ferramenta) {
     this.ferramentaSelecionada = f;
     this.http.post(`${this.API}/ferramentas/${f.id}/devolver`, {}).subscribe({

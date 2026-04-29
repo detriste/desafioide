@@ -11,7 +11,7 @@ import { finalize } from 'rxjs/operators'; // ✅ IMPORTANTE
 })
 export class LoginAlmoxarifePage implements OnInit {
 
-  cpf: string = '';
+  cracha: string = ''
   senha: string = '';
   mostrarSenha: boolean = false;
   carregando: boolean = false;
@@ -21,16 +21,7 @@ export class LoginAlmoxarifePage implements OnInit {
 
   ngOnInit() {}
 
-  formatarCpf(event: any) {
-    let valor = event.target.value.replace(/\D/g, '');
-    if (valor.length <= 11) {
-      valor = valor
-        .replace(/(\d{3})(\d)/, '$1.$2')
-        .replace(/(\d{3})(\d)/, '$1.$2')
-        .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
-    }
-    this.cpf = valor;
-  }
+ 
 
   toggleSenha() {
     this.mostrarSenha = !this.mostrarSenha;
@@ -39,14 +30,14 @@ export class LoginAlmoxarifePage implements OnInit {
   login() {
     this.erroLogin = '';
 
-    if (!this.cpf || !this.senha) {
+   if (!this.cracha || !this.senha){
       this.erroLogin = 'Preencha todos os campos.';
       return;
     }
 
     this.carregando = true;
 
-    this.authService.loginAlmoxarife(this.cpf, this.senha)
+this.authService.loginAlmoxarife(this.cracha, this.senha)
       .pipe(
         finalize(() => {
           this.carregando = false;
@@ -58,7 +49,7 @@ export class LoginAlmoxarifePage implements OnInit {
           this.router.navigateByUrl('/almoxarife', { replaceUrl: true });
         },
         error: (err) => {
-          this.erroLogin = err.error?.erro || 'CPF ou senha incorretos.';
+          this.erroLogin = err.error?.erro || 'Crachá ou senha incorretos.';
         }
       });
   }

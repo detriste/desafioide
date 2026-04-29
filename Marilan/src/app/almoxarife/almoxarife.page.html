@@ -125,11 +125,10 @@
 
       <ion-item>
         <ion-input
-          label="CPF" labelPlacement="stacked"
-          [(ngModel)]="dadosRetirada.cpf"
-          placeholder="000.000.000-00" maxlength="14"
-          (ionInput)="formatarCpfRetirada($event)"
-          (ionBlur)="buscarUsuarioPorCPF()">
+        label="Crachá"
+[(ngModel)]="dadosRetirada.cracha"
+placeholder="0000" maxlength="4"
+(ionBlur)="buscarUsuarioPorCracha()">
         </ion-input>
       </ion-item>
 

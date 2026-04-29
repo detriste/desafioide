@@ -16,14 +16,13 @@
 
     <div class="login-form">
       <ion-item lines="full">
-        <ion-label position="floating">CPF</ion-label>
+        <ion-label position="floating">Crachá</ion-label>
         <ion-input
           type="text"
-          [(ngModel)]="cpf"
-          placeholder="000.000.000-00"
-          maxlength="14"
-          (ionInput)="formatarCpf($event)">
-        </ion-input>
+          [(ngModel)]="cracha"
+          placeholder="0000"
+          maxlength="4"
+        ></ion-input>
       </ion-item>
 
       <ion-item lines="full">

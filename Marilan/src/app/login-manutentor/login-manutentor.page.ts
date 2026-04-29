@@ -10,7 +10,7 @@ import { AuthService } from '../services/auth';
 })
 export class LoginManutentorPage implements OnInit {
 
-  cpf: string = '';
+  cracha: string = ''
   senha: string = '';
   oficina: string = '';
   mostrarSenha: boolean = false;
@@ -21,16 +21,7 @@ export class LoginManutentorPage implements OnInit {
 
   ngOnInit() {}
 
-  formatarCpf(event: any) {
-    let valor = event.target.value.replace(/\D/g, '');
-    if (valor.length <= 11) {
-      valor = valor
-        .replace(/(\d{3})(\d)/, '$1.$2')
-        .replace(/(\d{3})(\d)/, '$1.$2')
-        .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
-    }
-    this.cpf = valor;
-  }
+
 
   toggleSenha() {
     this.mostrarSenha = !this.mostrarSenha;
@@ -39,14 +30,14 @@ export class LoginManutentorPage implements OnInit {
   login() {
     this.erroLogin = '';
 
-    if (!this.cpf || !this.senha || !this.oficina) {
+    if (!this.cracha || !this.senha) {
       this.erroLogin = 'Preencha todos os campos.';
       return;
     }
 
     this.carregando = true;
 
-    this.authService.loginManutentor(this.cpf, this.senha, this.oficina).subscribe({
+    this.authService.loginManutentor(this.cracha, this.senha, this.oficina).subscribe({
       next: (res) => {
         this.carregando = false;
         // Salva o usuário na sessão
@@ -55,7 +46,7 @@ export class LoginManutentorPage implements OnInit {
       },
       error: (err) => {
         this.carregando = false;
-        this.erroLogin = err.error?.erro || 'CPF, senha ou oficina incorretos.';
+        this.erroLogin = err.error?.erro || 'Crachá ou senha incorretos.';
       }
     });
   }

@@ -175,18 +175,16 @@
        <!-- antes do campo OS -->
        <ion-item>
         <ion-input
-          label="Seu CPF"
-          labelPlacement="stacked"
-          [(ngModel)]="trocaCpfSolicitante"
-          placeholder="000.000.000-00"
-          maxlength="14"
-          (ionInput)="formatarCpf($event, 'trocaCpfSolicitante')"
-          (ionBlur)="buscarCpfSolicitante()">
+label="Seu Crachá"
+[(ngModel)]="trocaCrachaSolicitante"
+placeholder="0000"
+maxlength="4"
+(ionBlur)="buscarCrachaSolicitante()">
         </ion-input>
       </ion-item>
 
-<ion-text color="danger" *ngIf="erroCpfSolicitante">
-  <p style="padding: 0 16px;">{{ erroCpfSolicitante }}</p>
+<ion-text color="danger" *ngIf="erroCrachaSolicitante">
+  <p style="padding: 0 16px;">{{ erroCrachaSolicitante }}</p>
 </ion-text>
 
 <ion-item>
@@ -242,11 +240,11 @@
 
       <ion-item>
         <ion-input
-          label="Seu CPF"
-          labelPlacement="stacked"
-          [(ngModel)]="cpfSolicitante"
-          placeholder="000.000.000-00"
-          (ionBlur)="buscarSolicitantePorCPF()">
+ label="Seu Crachá"
+[(ngModel)]="crachasSolicitante"
+placeholder="0000"
+maxlength="4"
+(ionBlur)=" buscarSolicitantePorCracha()">
         </ion-input>
       </ion-item>
 

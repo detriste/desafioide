@@ -10,11 +10,11 @@ export class AuthService {
 
   constructor(private http: HttpClient) {}
 
-  loginManutentor(cpf: string, senha: string, oficina: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/login/manutentor`, { cpf, senha, oficina });
+ loginManutentor(cracha: string, senha: string, oficina: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/login/manutentor`, { cracha, senha, oficina });
   }
 
-  loginAlmoxarife(cpf: string, senha: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/login/almoxarife`, { cpf, senha });
+  loginAlmoxarife(cracha: string, senha: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/login/almoxarife`, { cracha, senha });
   }
 }

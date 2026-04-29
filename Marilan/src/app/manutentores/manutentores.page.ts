@@ -9,10 +9,9 @@ import { HttpClient } from '@angular/common/http';
 export interface Manutentor {
   nome: string;
   area: string;
-  cpf?: string;
+  cracha?: string;
   ordemServico?: string;
   dataRetirada?: Date;
-  
 }
 
 export interface Ferramenta {
@@ -71,19 +70,22 @@ export class ManutentoresPage implements OnInit, OnDestroy {
   erroModal = '';
   salvando = false;
   private intervaloAtualizacao: any;
-  cpfSolicitante = '';
-nomeSolicitante = '';
-oficinaSolicitante = '';
+
+  // ── Solicitante (modal de solicitar troca) ────────────────────────────────
+  crachasSolicitante = '';
+  nomeSolicitante = '';
+  oficinaSolicitante = '';
 
   // ── Atenções ──────────────────────────────────────────────────────────────
   atencoesDaFerramenta: RegistroAtencao[] = [];
 
-  // ── Troca — solicitar (destinatário por CPF) ──────────────────────────────
-  trocaCpfDestinatario = '';
+  // ── Troca — solicitar (destinatário por crachá) ───────────────────────────
+  trocaCrachaDestinatario = '';
   trocaDestinatarioNome = '';
   trocaDestinatarioArea = '';
   erroCpfTroca = '';
   areaDeUso = '';
+
   // ── Troca — receber (pendentes) ───────────────────────────────────────────
   trocasPendentes: SolicitacaoTroca[] = [];
   trocaSelecionada: SolicitacaoTroca | null = null;
@@ -93,15 +95,14 @@ oficinaSolicitante = '';
   trocasAceitas: SolicitacaoTroca[] = [];
   trocaAceitaSelecionada: SolicitacaoTroca | null = null;
   osSolicitante = '';
-  trocaCpfSolicitante = '';
+  trocaCrachaSolicitante = '';
   solicitanteNome = '';
   solicitanteArea = '';
-  erroCpfSolicitante = '';
+  erroCrachaSolicitante = '';
 
   usuarioLogado: any = null;
 
   private API = 'http://localhost:3000/api';
-
 
   constructor(
     private router: Router,
@@ -113,18 +114,18 @@ oficinaSolicitante = '';
     const raw = sessionStorage.getItem('usuario');
     if (raw) this.usuarioLogado = JSON.parse(raw);
     this.recarregarTudo();
-   this.intervaloAtualizacao = setInterval(() => {
-  const algumModalAberto =
-    this.modalAtencaoAberto ||
-    this.modalVerAtencaoAberto ||
-    this.modalTrocaAberto ||
-    this.modalTrocasPendentesAberto ||
-    this.modalOsSolicitanteAberto;
+    this.intervaloAtualizacao = setInterval(() => {
+      const algumModalAberto =
+        this.modalAtencaoAberto ||
+        this.modalVerAtencaoAberto ||
+        this.modalTrocaAberto ||
+        this.modalTrocasPendentesAberto ||
+        this.modalOsSolicitanteAberto;
 
-  if (!algumModalAberto) {
-    this.recarregarTudo();
-  }
-}, 5000);
+      if (!algumModalAberto) {
+        this.recarregarTudo();
+      }
+    }, 5000);
   }
 
   ngOnDestroy() {
@@ -146,14 +147,13 @@ oficinaSolicitante = '';
           temAtencao: this.ferramentas.find(x => x.id === f.id)?.temAtencao ?? false,
           manutentor: f.usuario_nome ? {
             nome: f.usuario_nome,
-            cpf: f.usuario_cpf,
+            cracha: f.usuario_cracha,
             area: f.usuario_area,
             ordemServico: f.observacao?.replace('OS: ', ''),
             dataRetirada: f.data_retirada ? new Date(f.data_retirada) : undefined,
           } : undefined,
         }));
 
-        // Atualiza só os campos que mudaram, sem recriar o array inteiro
         novas.forEach(nova => {
           const existente = this.ferramentas.find(x => x.id === nova.id);
           if (existente) {
@@ -163,14 +163,12 @@ oficinaSolicitante = '';
           }
         });
 
-        // Adiciona ferramentas novas que ainda não existem
         novas.forEach(nova => {
           if (!this.ferramentas.find(x => x.id === nova.id)) {
             this.ferramentas.push(nova);
           }
         });
 
-        // Remove ferramentas que sumiram do servidor
         this.ferramentas = this.ferramentas.filter(f =>
           novas.find(n => n.id === f.id)
         );
@@ -188,7 +186,7 @@ oficinaSolicitante = '';
     this.carregarTrocasAceitas();
   }
 
- verificarAtencoes() {
+  verificarAtencoes() {
     const emUso = this.ferramentas.filter(f => f.status === 'em_uso');
     emUso.forEach(f => {
       this.http.get<RegistroAtencao[]>(`${this.API}/ferramentas/${f.id}/atencoes`).subscribe({
@@ -227,28 +225,28 @@ oficinaSolicitante = '';
   }
 
   confirmarAtencao() {
-  if (!this.descricaoAtencao.trim()) {
-    this.erroModal = 'Descreva o problema brevemente.';
-    return;
-  }
-  this.salvando = true;
-  this.http.post(`${this.API}/ferramentas/${this.ferramentaSelecionada!.id}/atencao`, {
-    observacao: this.descricaoAtencao,
-    reporter_nome: this.usuarioLogado?.nome ?? 'Manutentor'
-  }).subscribe({
-    next: () => {
-      this.ferramentaSelecionada!.temAtencao = true;
-      this.fecharModais();
-      this.exibirToast('Ponto de atenção registrado!', 'warning');
-    },
-    error: (err) => {
-      this.erroModal = err.error?.erro || 'Erro ao registrar.';
-      this.salvando = false;
+    if (!this.descricaoAtencao.trim()) {
+      this.erroModal = 'Descreva o problema brevemente.';
+      return;
     }
-  });
-}
+    this.salvando = true;
+    this.http.post(`${this.API}/ferramentas/${this.ferramentaSelecionada!.id}/atencao`, {
+      observacao: this.descricaoAtencao,
+      reporter_nome: this.usuarioLogado?.nome ?? 'Manutentor'
+    }).subscribe({
+      next: () => {
+        this.ferramentaSelecionada!.temAtencao = true;
+        this.fecharModais();
+        this.exibirToast('Ponto de atenção registrado!', 'warning');
+      },
+      error: (err) => {
+        this.erroModal = err.error?.erro || 'Erro ao registrar.';
+        this.salvando = false;
+      }
+    });
+  }
 
-abrirVerAtencoes(f: Ferramenta) {
+  abrirVerAtencoes(f: Ferramenta) {
     this.ferramentaSelecionada = f;
     this.atencoesDaFerramenta = [];
     this.modalVerAtencaoAberto = true;
@@ -259,23 +257,21 @@ abrirVerAtencoes(f: Ferramenta) {
     });
   }
 
-  buscarSolicitantePorCPF() {
-    const cpf = this.cpfSolicitante?.trim();
-    if (!cpf) return;
+  buscarSolicitantePorCracha() {
+    const cracha = this.crachasSolicitante?.trim();
+    if (!cracha) return;
     this.erroModal = '';
-  
-    // Bloqueia troca consigo mesmo
-    if (cpf === this.ferramentaSelecionada?.manutentor?.cpf ||
+
+    if (cracha === this.ferramentaSelecionada?.manutentor?.cracha ||
         this.ferramentaSelecionada?.manutentor?.nome === this.usuarioLogado?.nome) {
       this.erroModal = 'Você não pode solicitar uma troca consigo mesmo.';
       this.nomeSolicitante = '';
       this.oficinaSolicitante = '';
       return;
     }
-  
-    this.http.get<any>(`${this.API}/usuarios/cpf/${cpf}`).subscribe({
+
+    this.http.get<any>(`${this.API}/usuarios/cracha/${cracha}`).subscribe({
       next: (res) => {
-        // Bloqueia se o CPF buscado for o mesmo do dono atual da ferramenta
         if (res.nome === this.ferramentaSelecionada?.manutentor?.nome) {
           this.erroModal = 'Você não pode solicitar uma troca consigo mesmo.';
           this.nomeSolicitante = '';
@@ -286,26 +282,28 @@ abrirVerAtencoes(f: Ferramenta) {
         this.oficinaSolicitante = res.area;
       },
       error: () => {
-        this.erroModal = 'CPF não encontrado.';
+        this.erroModal = 'Crachá não encontrado.';
         this.nomeSolicitante = '';
         this.oficinaSolicitante = '';
       }
     });
   }
+
   // ── Solicitar Troca ───────────────────────────────────────────────────────
   abrirModalTroca(f: Ferramenta) {
     this.ferramentaSelecionada = f;
-    this.cpfSolicitante = '';
+    this.crachasSolicitante = '';
     this.nomeSolicitante = '';
     this.oficinaSolicitante = '';
     this.erroModal = '';
     this.modalTrocaAberto = true;
   }
-  buscarDestinatarioPorCPF() {
-    const cpf = this.trocaCpfDestinatario?.trim();
-    if (!cpf) return;
+
+  buscarDestinatarioPorCracha() {
+    const cracha = this.trocaCrachaDestinatario?.trim();
+    if (!cracha) return;
     this.erroCpfTroca = '';
-    this.http.get<any>(`${this.API}/usuarios/cpf/${cpf}`).subscribe({
+    this.http.get<any>(`${this.API}/usuarios/cracha/${cracha}`).subscribe({
       next: (res) => {
         this.trocaDestinatarioNome = res.nome;
         this.trocaDestinatarioArea = res.area;
@@ -320,7 +318,7 @@ abrirVerAtencoes(f: Ferramenta) {
 
   confirmarSolicitacaoTroca() {
     if (!this.nomeSolicitante.trim()) {
-      this.erroModal = 'Informe seu CPF primeiro.';
+      this.erroModal = 'Informe seu Crachá primeiro.';
       return;
     }
     const f = this.ferramentaSelecionada!;
@@ -344,6 +342,7 @@ abrirVerAtencoes(f: Ferramenta) {
       }
     });
   }
+
   // ── Trocas Pendentes (destinatário recebe) ────────────────────────────────
   carregarTrocasPendentes() {
     if (!this.usuarioLogado) return;
@@ -355,24 +354,12 @@ abrirVerAtencoes(f: Ferramenta) {
     });
   }
 
-  formatarCpf(event: any, campo: 'cpfSolicitante' | 'trocaCpfSolicitante') {
-    let valor = event.target.value.replace(/\D/g, '');
-    if (valor.length <= 11) {
-      valor = valor
-        .replace(/(\d{3})(\d)/, '$1.$2')
-        .replace(/(\d{3})(\d)/, '$1.$2')
-        .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
-    }
-    this[campo] = valor;
-  }
-
   abrirTrocasPendentes() {
     this.recarregarTudo();
     this.modalTrocasPendentesAberto = true;
   }
 
   aceitarTroca(troca: SolicitacaoTroca) {
-    // Só marca como aceita no backend — sem OS aqui
     this.http.post(`${this.API}/trocas/${troca.id}/aceitar`, {}).subscribe({
       next: () => {
         this.trocasPendentes = this.trocasPendentes.filter(t => t.id !== troca.id);
@@ -399,37 +386,36 @@ abrirVerAtencoes(f: Ferramenta) {
     this.http.get<SolicitacaoTroca[]>(
       `${this.API}/trocas/aceitas?solicitante=${encodeURIComponent(this.usuarioLogado.nome)}`
     ).subscribe({
-  
-       next: (dados) => {
-  const minhas = dados.filter(t => t.solicitante_nome === this.usuarioLogado?.nome);
-  this.trocasAceitas = minhas;
-  if (minhas.length > 0) {
-    this.trocaAceitaSelecionada = minhas[0];
-    this.osSolicitante = '';
-    this.trocaCpfSolicitante = '';
-    this.solicitanteNome = '';
-    this.solicitanteArea = '';
-    this.erroModal = '';
-    if (!this.modalOsSolicitanteAberto) {
-      this.modalOsSolicitanteAberto = true;
-    }
-  }
-},
+      next: (dados) => {
+        const minhas = dados.filter(t => t.solicitante_nome === this.usuarioLogado?.nome);
+        this.trocasAceitas = minhas;
+        if (minhas.length > 0) {
+          this.trocaAceitaSelecionada = minhas[0];
+          this.osSolicitante = '';
+          this.trocaCrachaSolicitante = '';
+          this.solicitanteNome = '';
+          this.solicitanteArea = '';
+          this.erroModal = '';
+          if (!this.modalOsSolicitanteAberto) {
+            this.modalOsSolicitanteAberto = true;
+          }
+        }
+      },
       error: () => {}
     });
   }
 
-  buscarCpfSolicitante() {
-    const cpf = this.trocaCpfSolicitante?.trim();
-    if (!cpf) return;
-    this.erroCpfSolicitante = '';
-    this.http.get<any>(`${this.API}/usuarios/cpf/${cpf}`).subscribe({
+  buscarCrachaSolicitante() {
+    const cracha = this.trocaCrachaSolicitante?.trim();
+    if (!cracha) return;
+    this.erroCrachaSolicitante = '';
+    this.http.get<any>(`${this.API}/usuarios/cracha/${cracha}`).subscribe({
       next: (res) => {
         this.solicitanteNome = res.nome;
         this.solicitanteArea = res.area;
       },
       error: () => {
-        this.erroCpfSolicitante = 'Usuário não encontrado.';
+        this.erroCrachaSolicitante = 'Usuário não encontrado.';
         this.solicitanteNome = '';
         this.solicitanteArea = '';
       }
@@ -447,12 +433,12 @@ abrirVerAtencoes(f: Ferramenta) {
     }
     const t = this.trocaAceitaSelecionada!;
     this.salvando = true;
-  
+
     this.http.post(`${this.API}/trocas/${t.id}/concluir`, {
-      usuario_cpf:   this.usuarioLogado?.cpf ?? null,
-      usuario_nome:  this.usuarioLogado?.nome ?? '',
-      usuario_area:  this.areaDeUso.trim(),
-      ordem_servico: this.osSolicitante.trim()
+      usuario_cracha: this.usuarioLogado?.cracha ?? null,
+      usuario_nome:   this.usuarioLogado?.nome ?? '',
+      usuario_area:   this.areaDeUso.trim(),
+      ordem_servico:  this.osSolicitante.trim()
     }).subscribe({
       next: () => {
         this.modalOsSolicitanteAberto = false;
@@ -469,7 +455,7 @@ abrirVerAtencoes(f: Ferramenta) {
   }
 
   // ── Fechar todos os modais ────────────────────────────────────────────────
- fecharModais() {
+  fecharModais() {
     this.modalAtencaoAberto = false;
     this.modalVerAtencaoAberto = false;
     this.modalTrocaAberto = false;
@@ -479,13 +465,12 @@ abrirVerAtencoes(f: Ferramenta) {
     this.ferramentaSelecionada = null;
     this.trocaSelecionada = null;
     this.trocaAceitaSelecionada = null;
-    this.trocaCpfSolicitante = '';
+    this.trocaCrachaSolicitante = '';
     this.solicitanteNome = '';
     this.solicitanteArea = '';
-    this.erroCpfSolicitante = '';
+    this.erroCrachaSolicitante = '';
     this.erroModal = '';
     this.salvando = false;
-    
   }
 
   async exibirToast(message: string, color: string) {
@@ -493,7 +478,7 @@ abrirVerAtencoes(f: Ferramenta) {
     await toast.present();
   }
 
- sair() {
+  sair() {
     if (this.intervaloAtualizacao) {
       clearInterval(this.intervaloAtualizacao);
     }
