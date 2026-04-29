@@ -1,6 +1,6 @@
 <ion-header [translucent]="true">
   <ion-toolbar color="primary">
-    <ion-title>Manutenção</ion-title>
+   <ion-title>Olá, {{ usuarioLogado?.nome?.split(' ')[0] }}</ion-title>
     <ion-buttons slot="end">
       <!-- Badge de trocas pendentes -->
       <ion-button fill="clear" (click)="abrirTrocasPendentes()">
@@ -82,6 +82,16 @@
             <ion-icon name="swap-horizontal-outline" slot="start"></ion-icon>
             Solicitar Troca
           </ion-button>
+          <!-- Botão ver atenções (aparece quando tem atenção registrada) -->
+<ion-button
+  *ngIf="abaAtiva === 'em_uso' && f.temAtencao"
+  size="small"
+  color="warning"
+  fill="solid"
+  (click)="abrirVerAtencoes(f); $event.stopPropagation()">
+  <ion-icon name="eye-outline" slot="start"></ion-icon>
+  Ver Atenções
+</ion-button>
 
         </div>
 
@@ -123,6 +133,59 @@
   </ng-template>
 </ion-modal>
 
+<!-- ── MODAL OS SOLICITANTE (troca aceita) ── -->
+<ion-modal [isOpen]="modalOsSolicitanteAberto" (didDismiss)="fecharModais()">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar color="success">
+        <ion-title>Troca Aceita!</ion-title>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content class="ion-padding">
+      <p *ngIf="trocaAceitaSelecionada">
+        Sua solicitação para <strong>{{ trocaAceitaSelecionada.ferramenta_nome }}</strong> foi aceita.
+        Informe sua OS para registrar o uso.
+      </p>
+       <!-- antes do campo OS -->
+<ion-item>
+  <ion-input
+    label="Seu CPF"
+    labelPlacement="stacked"
+    [(ngModel)]="trocaCpfSolicitante"
+    placeholder="000.000.000-00"
+    (ionBlur)="buscarCpfSolicitante()">
+  </ion-input>
+</ion-item>
+
+<ion-text color="danger" *ngIf="erroCpfSolicitante">
+  <p style="padding: 0 16px;">{{ erroCpfSolicitante }}</p>
+</ion-text>
+
+<ion-item>
+  <ion-input
+    label="Seu nome"
+    labelPlacement="stacked"
+    [(ngModel)]="solicitanteNome"
+    [readonly]="true">
+  </ion-input>
+</ion-item>
+      <ion-item>
+        <ion-input
+          label="Sua Ordem de Serviço"
+          labelPlacement="stacked"
+          [(ngModel)]="osSolicitante">
+        </ion-input>
+      </ion-item>
+
+      <ion-text color="danger" *ngIf="erroModal"><p>{{ erroModal }}</p></ion-text>
+
+      <ion-button expand="block" color="success" (click)="confirmarOsSolicitante()" [disabled]="salvando">
+        Confirmar
+      </ion-button>
+    </ion-content>
+  </ng-template>
+</ion-modal>
+
 <!-- ── MODAL SOLICITAR TROCA ── -->
 <ion-modal [isOpen]="modalTrocaAberto" (didDismiss)="fecharModais()">
   <ng-template>
@@ -139,21 +202,36 @@
 
       <ion-item>
         <ion-input
+          label="CPF do destinatário"
+          labelPlacement="stacked"
+          [(ngModel)]="trocaCpfDestinatario"
+          placeholder="000.000.000-00"
+          (ionBlur)="buscarDestinatarioPorCPF()">
+        </ion-input>
+      </ion-item>
+
+      <ion-text color="danger" *ngIf="erroCpfTroca">
+        <p style="padding: 0 16px;">{{ erroCpfTroca }}</p>
+      </ion-text>
+
+      <ion-item>
+        <ion-input
           label="Nome do destinatário"
           labelPlacement="stacked"
-          [(ngModel)]="trocaDestinatarioNome">
+          [(ngModel)]="trocaDestinatarioNome"
+          [readonly]="true"
+          placeholder="Preenchido automaticamente">
         </ion-input>
       </ion-item>
 
       <ion-item>
-        <ion-select
+        <ion-input
           label="Área do destinatário"
           labelPlacement="stacked"
-          [(ngModel)]="trocaDestinatarioArea">
-          <ion-select-option value="MME">MME</ion-select-option>
-          <ion-select-option value="MEC">MEC</ion-select-option>
-          <ion-select-option value="ELE">ELE</ion-select-option>
-        </ion-select>
+          [(ngModel)]="trocaDestinatarioArea"
+          [readonly]="true"
+          placeholder="Preenchido automaticamente">
+        </ion-input>
       </ion-item>
 
       <ion-text color="danger" *ngIf="erroModal"><p>{{ erroModal }}</p></ion-text>
@@ -161,6 +239,38 @@
       <ion-button expand="block" color="tertiary" (click)="confirmarSolicitacaoTroca()" [disabled]="salvando">
         Enviar Solicitação
       </ion-button>
+    </ion-content>
+  </ng-template>
+</ion-modal>
+<!-- ── MODAL VER ATENÇÕES ── -->
+<ion-modal [isOpen]="modalVerAtencaoAberto" (didDismiss)="fecharModais()">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar color="warning">
+        <ion-title>Histórico de Atenções</ion-title>
+        <ion-buttons slot="end">
+          <ion-button (click)="fecharModais()"><ion-icon name="close-outline"></ion-icon></ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content class="ion-padding">
+      <p *ngIf="ferramentaSelecionada"><strong>{{ ferramentaSelecionada.nome }}</strong></p>
+
+      <div *ngIf="atencoesDaFerramenta.length === 0" style="text-align:center; padding:40px; color:var(--ion-color-medium)">
+        <ion-icon name="checkmark-circle-outline" style="font-size:48px; display:block; margin-bottom:8px;"></ion-icon>
+        <p>Nenhuma atenção registrada.</p>
+      </div>
+
+      <ion-card *ngFor="let a of atencoesDaFerramenta">
+        <ion-card-content>
+          <p><strong>{{ a.usuario_nome || 'Manutentor' }}</strong></p>
+          <p>{{ a.observacao.replace('[ATENÇÃO] ', '') }}</p>
+          <p style="font-size:12px; color:var(--ion-color-medium)">
+            {{ a.criado_em | date:'dd/MM/yyyy HH:mm' }}
+          </p>
+        </ion-card-content>
+      </ion-card>
+
     </ion-content>
   </ng-template>
 </ion-modal>
@@ -199,35 +309,3 @@
   </ng-template>
 </ion-modal>
 
-<!-- ── MODAL FORMULÁRIO TROCA (aceitar) ── -->
-<ion-modal [isOpen]="modalFormTrocaAberto" (didDismiss)="fecharModais()">
-  <ng-template>
-    <ion-header>
-      <ion-toolbar color="success">
-        <ion-title>Confirmar Troca</ion-title>
-        <ion-buttons slot="end">
-          <ion-button (click)="fecharModais()"><ion-icon name="close-outline"></ion-icon></ion-button>
-        </ion-buttons>
-      </ion-toolbar>
-    </ion-header>
-    <ion-content class="ion-padding">
-      <p *ngIf="trocaSelecionada">
-        Você está aceitando a ferramenta <strong>{{ trocaSelecionada.ferramenta_nome }}</strong>.
-      </p>
-
-      <ion-item>
-        <ion-input
-          label="Sua Ordem de Serviço"
-          labelPlacement="stacked"
-          [(ngModel)]="trocaOS">
-        </ion-input>
-      </ion-item>
-
-      <ion-text color="danger" *ngIf="erroModal"><p>{{ erroModal }}</p></ion-text>
-
-      <ion-button expand="block" color="success" (click)="confirmarFormTroca()" [disabled]="salvando">
-        Confirmar Troca
-      </ion-button>
-    </ion-content>
-  </ng-template>
-</ion-modal>
