@@ -12,6 +12,7 @@ export interface Manutentor {
   cpf?: string;
   ordemServico?: string;
   dataRetirada?: Date;
+  
 }
 
 export interface Ferramenta {
@@ -69,6 +70,7 @@ export class ManutentoresPage implements OnInit {
   descricaoAtencao = '';
   erroModal = '';
   salvando = false;
+  private intervaloAtualizacao: any;
   cpfSolicitante = '';
 nomeSolicitante = '';
 oficinaSolicitante = '';
@@ -99,6 +101,7 @@ oficinaSolicitante = '';
   usuarioLogado: any = null;
 
   private API = 'http://localhost:3000/api';
+  private ferramentasCached = false;
 
   constructor(
     private router: Router,
@@ -112,6 +115,7 @@ oficinaSolicitante = '';
     this.carregarFerramentas();
     this.carregarTrocasPendentes();
     this.carregarTrocasAceitas();
+    
   }
 
   // ── Ferramentas ───────────────────────────────────────────────────────────
@@ -134,8 +138,13 @@ oficinaSolicitante = '';
             dataRetirada: f.data_retirada ? new Date(f.data_retirada) : undefined,
           } : undefined,
         }));
-        this.filtrar();
-        this.verificarAtencoes();
+      this.filtrar();
+        if (!this.ferramentasCached) {
+          this.ferramentasCached = true;
+          this.verificarAtencoes();
+        }
+
+
       },
       error: () => this.exibirToast('Erro ao carregar ferramentas.', 'danger')
     });
@@ -180,30 +189,26 @@ oficinaSolicitante = '';
   }
 
   confirmarAtencao() {
-    if (!this.descricaoAtencao.trim()) {
-      this.erroModal = 'Descreva o problema brevemente.';
-      return;
-    }
-    this.salvando = true;
-    this.http.post(`${this.API}/ferramentas/${this.ferramentaSelecionada!.id}/atencao`, {
-      observacao: this.descricaoAtencao,
-      reporter_nome: this.usuarioLogado?.nome ?? 'Manutentor'
-    }).subscribe({
-      next: () => {
-        this.ferramentaSelecionada!.temAtencao = true;
-        this.fecharModais();
-        this.cpfSolicitante = '';
-this.nomeSolicitante = '';
-this.oficinaSolicitante = '';
-        this.areaDeUso = '';
-        this.exibirToast('Ponto de atenção registrado!', 'warning');
-      },
-      error: (err) => {
-        this.erroModal = err.error?.erro || 'Erro ao registrar.';
-        this.salvando = false;
-      }
-    });
+  if (!this.descricaoAtencao.trim()) {
+    this.erroModal = 'Descreva o problema brevemente.';
+    return;
   }
+  this.salvando = true;
+  this.http.post(`${this.API}/ferramentas/${this.ferramentaSelecionada!.id}/atencao`, {
+    observacao: this.descricaoAtencao,
+    reporter_nome: this.usuarioLogado?.nome ?? 'Manutentor'
+  }).subscribe({
+    next: () => {
+      this.ferramentaSelecionada!.temAtencao = true;
+      this.fecharModais();
+      this.exibirToast('Ponto de atenção registrado!', 'warning');
+    },
+    error: (err) => {
+      this.erroModal = err.error?.erro || 'Erro ao registrar.';
+      this.salvando = false;
+    }
+  });
+}
 
   abrirVerAtencoes(f: Ferramenta) {
     this.ferramentaSelecionada = f;
@@ -365,7 +370,9 @@ this.oficinaSolicitante = '';
     this.solicitanteNome = '';
     this.solicitanteArea = '';
     this.erroModal = '';
-    this.modalOsSolicitanteAberto = true;
+    if (!this.modalOsSolicitanteAberto) {
+      this.modalOsSolicitanteAberto = true;
+    }
   }
 },
       error: () => {}
@@ -438,6 +445,7 @@ this.oficinaSolicitante = '';
     this.erroCpfSolicitante = '';
     this.erroModal = '';
     this.salvando = false;
+    
   }
 
   async exibirToast(message: string, color: string) {
@@ -445,7 +453,8 @@ this.oficinaSolicitante = '';
     await toast.present();
   }
 
-  sair() {
+ sair() {
+    this.ferramentasCached = false;
     sessionStorage.removeItem('usuario');
     this.router.navigateByUrl('/home', { replaceUrl: true });
   }
