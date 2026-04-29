@@ -2,7 +2,6 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
-
 import { Router } from '@angular/router';
 import { ToastController } from '@ionic/angular';
 import { HttpClient } from '@angular/common/http';
@@ -30,11 +29,7 @@ export interface Ferramenta {
   templateUrl: './almoxarife.page.html',
   styleUrls: ['./almoxarife.page.scss'],
   standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    IonicModule
-  ]
+  imports: [CommonModule, FormsModule, IonicModule]
 })
 export class AlmoxarifePage implements OnInit {
 
@@ -73,9 +68,18 @@ export class AlmoxarifePage implements OnInit {
     this.carregarFerramentas();
   }
 
+  // ── Navegação da navbar — blura o foco antes de navegar para evitar aria-hidden ──
+  irPara(rota: string) {
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+    setTimeout(() => {
+      this.router.navigateByUrl('/' + rota, { replaceUrl: true });
+    }, 50);
+  }
+
   carregarFerramentas() {
     this.carregando = true;
-
     this.http.get<any[]>(`${this.API}/ferramentas`).subscribe({
       next: (dados) => {
         this.ferramentas = dados.map(f => ({
@@ -92,7 +96,6 @@ export class AlmoxarifePage implements OnInit {
             dataRetirada: f.data_retirada ? new Date(f.data_retirada) : undefined,
           } : undefined,
         }));
-
         this.filtrar();
         this.carregando = false;
       },
@@ -105,16 +108,13 @@ export class AlmoxarifePage implements OnInit {
 
   filtrar() {
     const termo = this.termoBusca.toLowerCase().trim();
-
     this.ferramentasFiltradas = this.ferramentas.filter(f => {
       const matchTermo =
         !termo ||
         f.nome.toLowerCase().includes(termo) ||
         f.codigo.toLowerCase().includes(termo);
-
       const matchStatus =
         this.filtroStatus === 'todos' || f.status === this.filtroStatus;
-
       return matchTermo && matchStatus;
     });
   }
@@ -124,20 +124,8 @@ export class AlmoxarifePage implements OnInit {
     this.filtrar();
   }
 
-  getBadgeColor(status: string): string {
-    return {
-      disponivel: 'success',
-      em_uso: 'warning',
-      manutencao: 'danger'
-    }[status] ?? 'medium';
-  }
-
   getStatusLabel(status: string): string {
-    return {
-      disponivel: 'Disponível',
-      em_uso: 'Em Uso',
-      manutencao: 'Manutenção'
-    }[status] ?? status;
+    return { disponivel: 'Disponível', em_uso: 'Em Uso', manutencao: 'Manutenção' }[status] ?? status;
   }
 
   abrirModalRetirada(f: Ferramenta) {
@@ -156,14 +144,24 @@ export class AlmoxarifePage implements OnInit {
   }
 
   fecharModais() {
-    this.modalRetiradaAberto = false;
+    this.modalRetiradaAberto   = false;
     this.modalManutencaoAberto = false;
     this.ferramentaSelecionada = null;
     this.erroModal = '';
-    this.salvando = false;
+    this.salvando  = false;
   }
 
-  // ── Busca automática por CPF ────────────────────────────────────────────────
+  formatarCpfRetirada(event: any) {
+    let valor = event.target.value.replace(/\D/g, '');
+    if (valor.length <= 11) {
+      valor = valor
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+    }
+    this.dadosRetirada.cpf = valor;
+  }
+
   buscarUsuarioPorCPF() {
     const cpf = this.dadosRetirada.cpf?.trim();
     if (!cpf) return;
@@ -184,107 +182,52 @@ export class AlmoxarifePage implements OnInit {
 
   confirmarRetirada() {
     const f = this.ferramentaSelecionada!;
-
-    if (!this.dadosRetirada.cpf?.trim()) {
-      this.erroModal = 'Informe o CPF.';
-      return;
-    }
-
-    if (!this.dadosRetirada.usuario_nome?.trim()) {
-      this.erroModal = 'CPF não encontrado. Verifique e tente novamente.';
-      return;
-    }
-
-    if (!this.dadosRetirada.usuario_area) {
-      this.erroModal = 'Área não encontrada. Verifique o CPF.';
-      return;
-    }
+    if (!this.dadosRetirada.cpf?.trim()) { this.erroModal = 'Informe o CPF.'; return; }
+    if (!this.dadosRetirada.usuario_nome?.trim()) { this.erroModal = 'CPF não encontrado.'; return; }
+    if (!this.dadosRetirada.usuario_area) { this.erroModal = 'Área não encontrada.'; return; }
 
     this.salvando = true;
     this.http.post(`${this.API}/ferramentas/${f.id}/retirar`, {
-      usuario_nome: this.dadosRetirada.usuario_nome,
-      usuario_area: this.dadosRetirada.usuario_area,
+      usuario_nome:  this.dadosRetirada.usuario_nome,
+      usuario_area:  this.dadosRetirada.usuario_area,
       ordem_servico: this.dadosRetirada.ordem_servico
     }).subscribe({
-      next: () => {
-        this.fecharModais();
-        this.carregarFerramentas();
-      },
-      error: (err) => {
-        this.erroModal = err.error?.erro || 'Erro ao retirar.';
-        this.salvando = false;
-      }
+      next: () => { this.fecharModais(); this.carregarFerramentas(); },
+      error: (err) => { this.erroModal = err.error?.erro || 'Erro ao retirar.'; this.salvando = false; }
     });
   }
 
   confirmarManutencao() {
     const f = this.ferramentaSelecionada!;
-
-    if (!this.descricaoManutencao.trim()) {
-      this.erroModal = 'Descreva o problema.';
-      return;
-    }
+    if (!this.descricaoManutencao.trim()) { this.erroModal = 'Descreva o problema.'; return; }
 
     this.salvando = true;
     this.http.post(`${this.API}/ferramentas/${f.id}/manutencao`, {
       observacao: this.descricaoManutencao
     }).subscribe({
-      next: () => {
-        this.fecharModais();
-        this.carregarFerramentas();
-      },
-      error: (err) => {
-        this.erroModal = err.error?.erro || 'Erro na manutenção.';
-        this.salvando = false;
-      }
+      next: () => { this.fecharModais(); this.carregarFerramentas(); },
+      error: (err) => { this.erroModal = err.error?.erro || 'Erro na manutenção.'; this.salvando = false; }
     });
   }
 
   executarDevolucao(f: Ferramenta) {
     this.ferramentaSelecionada = f;
-    this.confirmarDevolucao();
+    this.http.post(`${this.API}/ferramentas/${f.id}/devolver`, {}).subscribe({
+      next: () => { this.fecharModais(); this.carregarFerramentas(); },
+      error: (err) => { this.exibirToast(err.error?.erro || 'Erro ao devolver.', 'danger'); }
+    });
   }
 
   executarDisponibilizar(f: Ferramenta) {
     this.ferramentaSelecionada = f;
-    this.confirmarManutencaoConcluida();
-  }
-
-  confirmarDevolucao() {
-    const f = this.ferramentaSelecionada!;
-
-    this.http.post(`${this.API}/ferramentas/${f.id}/devolver`, {}).subscribe({
-      next: () => {
-        this.fecharModais();
-        this.carregarFerramentas();
-      },
-      error: (err) => {
-        this.exibirToast(err.error?.erro || 'Erro ao devolver.', 'danger');
-      }
-    });
-  }
-
-  confirmarManutencaoConcluida() {
-    const f = this.ferramentaSelecionada!;
-
     this.http.post(`${this.API}/ferramentas/${f.id}/disponibilizar`, {}).subscribe({
-      next: () => {
-        this.fecharModais();
-        this.carregarFerramentas();
-      },
-      error: (err) => {
-        this.exibirToast(err.error?.erro || 'Erro ao liberar.', 'danger');
-      }
+      next: () => { this.fecharModais(); this.carregarFerramentas(); },
+      error: (err) => { this.exibirToast(err.error?.erro || 'Erro ao liberar.', 'danger'); }
     });
   }
 
   async exibirToast(message: string, color: string) {
-    const toast = await this.toastCtrl.create({
-      message,
-      color,
-      duration: 2500,
-      position: 'bottom'
-    });
+    const toast = await this.toastCtrl.create({ message, color, duration: 2500, position: 'bottom' });
     await toast.present();
   }
 

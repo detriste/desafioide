@@ -58,46 +58,37 @@
         <!-- BOTÕES -->
         <div style="margin-top:10px; display:flex; gap:6px; flex-wrap:wrap;">
 
-          <!-- DISPONÍVEL -->
           <ion-button
             *ngIf="f.status==='disponivel'"
-            size="small"
-            color="success"
+            size="small" color="success"
             (click)="abrirModalRetirada(f); $event.stopPropagation()">
             Retirar
           </ion-button>
 
           <ion-button
             *ngIf="f.status==='disponivel'"
-            size="small"
-            color="danger"
-            fill="outline"
+            size="small" color="danger" fill="outline"
             (click)="abrirModalManutencao(f); $event.stopPropagation()">
             Manutenção
           </ion-button>
 
-          <!-- EM USO -->
           <ion-button
             *ngIf="f.status==='em_uso'"
-            size="small"
-            color="warning"
+            size="small" color="warning"
             (click)="executarDevolucao(f)">
             Devolver
           </ion-button>
 
           <ion-button
             *ngIf="f.status==='em_uso'"
-            size="small"
-            color="danger"
+            size="small" color="danger"
             (click)="abrirModalManutencao(f)">
             Manutenção
           </ion-button>
 
-          <!-- MANUTENÇÃO -->
           <ion-button
             *ngIf="f.status==='manutencao'"
-            size="small"
-            color="success"
+            size="small" color="success"
             (click)="executarDisponibilizar(f)">
             Liberar
           </ion-button>
@@ -114,7 +105,6 @@
 <!-- MODAL RETIRADA -->
 <ion-modal [isOpen]="modalRetiradaAberto" (didDismiss)="fecharModais()">
   <ng-template>
-
     <ion-header>
       <ion-toolbar color="success">
         <ion-title>Retirar Ferramenta</ion-title>
@@ -127,41 +117,35 @@
     </ion-header>
 
     <ion-content class="ion-padding">
-
       <ion-item>
         <ion-input
-          label="CPF"
-          labelPlacement="stacked"
+          label="CPF" labelPlacement="stacked"
           [(ngModel)]="dadosRetirada.cpf"
-          placeholder="000.000.000-00"
+          placeholder="000.000.000-00" maxlength="14"
+          (ionInput)="formatarCpfRetirada($event)"
           (ionBlur)="buscarUsuarioPorCPF()">
         </ion-input>
       </ion-item>
 
       <ion-item>
         <ion-input
-          label="Nome"
-          labelPlacement="stacked"
+          label="Nome" labelPlacement="stacked"
           [(ngModel)]="dadosRetirada.usuario_nome"
-          [readonly]="true"
-          placeholder="Preenchido automaticamente">
+          [readonly]="true" placeholder="Preenchido automaticamente">
         </ion-input>
       </ion-item>
 
       <ion-item>
         <ion-input
-          label="Área"
-          labelPlacement="stacked"
+          label="Área" labelPlacement="stacked"
           [(ngModel)]="dadosRetirada.usuario_area"
-          [readonly]="true"
-          placeholder="Preenchido automaticamente">
+          [readonly]="true" placeholder="Preenchido automaticamente">
         </ion-input>
       </ion-item>
 
       <ion-item>
         <ion-input
-          label="Ordem de Serviço"
-          labelPlacement="stacked"
+          label="Ordem de Serviço" labelPlacement="stacked"
           [(ngModel)]="dadosRetirada.ordem_servico">
         </ion-input>
       </ion-item>
@@ -173,16 +157,13 @@
       <ion-button expand="block" (click)="confirmarRetirada()" [disabled]="salvando">
         Confirmar
       </ion-button>
-
     </ion-content>
-
   </ng-template>
 </ion-modal>
 
 <!-- MODAL MANUTENÇÃO -->
 <ion-modal [isOpen]="modalManutencaoAberto" (didDismiss)="fecharModais()">
   <ng-template>
-
     <ion-header>
       <ion-toolbar color="danger">
         <ion-title>Manutenção</ion-title>
@@ -195,11 +176,9 @@
     </ion-header>
 
     <ion-content class="ion-padding">
-
       <ion-item>
         <ion-textarea
-          label="Descreva o problema"
-          labelPlacement="stacked"
+          label="Descreva o problema" labelPlacement="stacked"
           [(ngModel)]="descricaoManutencao">
         </ion-textarea>
       </ion-item>
@@ -211,8 +190,18 @@
       <ion-button expand="block" (click)="confirmarManutencao()" [disabled]="salvando">
         Enviar
       </ion-button>
-
     </ion-content>
-
   </ng-template>
 </ion-modal>
+
+<!-- NAVBAR -->
+<ion-tab-bar slot="bottom" class="navbar">
+  <ion-tab-button class="tab-ativo" (click)="irPara('almoxarife')">
+    <ion-icon name="cube-outline"></ion-icon>
+    <ion-label>Ferramentas</ion-label>
+  </ion-tab-button>
+  <ion-tab-button (click)="irPara('dashboard')">
+    <ion-icon name="bar-chart-outline"></ion-icon>
+    <ion-label>Dashboard</ion-label>
+  </ion-tab-button>
+</ion-tab-bar>
