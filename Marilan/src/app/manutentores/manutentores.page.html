@@ -147,15 +147,17 @@
         Informe sua OS para registrar o uso.
       </p>
        <!-- antes do campo OS -->
-<ion-item>
-  <ion-input
-    label="Seu CPF"
-    labelPlacement="stacked"
-    [(ngModel)]="trocaCpfSolicitante"
-    placeholder="000.000.000-00"
-    (ionBlur)="buscarCpfSolicitante()">
-  </ion-input>
-</ion-item>
+       <ion-item>
+        <ion-input
+          label="Seu CPF"
+          labelPlacement="stacked"
+          [(ngModel)]="trocaCpfSolicitante"
+          placeholder="000.000.000-00"
+          maxlength="14"
+          (ionInput)="formatarCpf($event, 'trocaCpfSolicitante')"
+          (ionBlur)="buscarCpfSolicitante()">
+        </ion-input>
+      </ion-item>
 
 <ion-text color="danger" *ngIf="erroCpfSolicitante">
   <p style="padding: 0 16px;">{{ erroCpfSolicitante }}</p>
@@ -167,6 +169,14 @@
     labelPlacement="stacked"
     [(ngModel)]="solicitanteNome"
     [readonly]="true">
+  </ion-input>
+</ion-item>
+<ion-item>
+  <ion-input
+    label="Área de uso"
+    labelPlacement="stacked"
+    [(ngModel)]="areaDeUso"
+    placeholder="Ex: Linha 3, Setor B...">
   </ion-input>
 </ion-item>
       <ion-item>
@@ -199,26 +209,26 @@
     </ion-header>
     <ion-content class="ion-padding">
       <p *ngIf="ferramentaSelecionada"><strong>{{ ferramentaSelecionada.nome }}</strong></p>
+      <p style="color: var(--ion-color-medium); font-size:13px;">
+        Confirme seu CPF para enviar a solicitação para 
+        <strong>{{ ferramentaSelecionada?.manutentor?.nome }}</strong>.
+      </p>
 
       <ion-item>
         <ion-input
-          label="CPF do destinatário"
+          label="Seu CPF"
           labelPlacement="stacked"
-          [(ngModel)]="trocaCpfDestinatario"
+          [(ngModel)]="cpfSolicitante"
           placeholder="000.000.000-00"
-          (ionBlur)="buscarDestinatarioPorCPF()">
+          (ionBlur)="buscarSolicitantePorCPF()">
         </ion-input>
       </ion-item>
 
-      <ion-text color="danger" *ngIf="erroCpfTroca">
-        <p style="padding: 0 16px;">{{ erroCpfTroca }}</p>
-      </ion-text>
-
       <ion-item>
         <ion-input
-          label="Nome do destinatário"
+          label="Seu nome"
           labelPlacement="stacked"
-          [(ngModel)]="trocaDestinatarioNome"
+          [(ngModel)]="nomeSolicitante"
           [readonly]="true"
           placeholder="Preenchido automaticamente">
         </ion-input>
@@ -226,9 +236,9 @@
 
       <ion-item>
         <ion-input
-          label="Área do destinatário"
+          label="Sua oficina"
           labelPlacement="stacked"
-          [(ngModel)]="trocaDestinatarioArea"
+          [(ngModel)]="oficinaSolicitante"
           [readonly]="true"
           placeholder="Preenchido automaticamente">
         </ion-input>
@@ -236,7 +246,7 @@
 
       <ion-text color="danger" *ngIf="erroModal"><p>{{ erroModal }}</p></ion-text>
 
-      <ion-button expand="block" color="tertiary" (click)="confirmarSolicitacaoTroca()" [disabled]="salvando">
+      <ion-button expand="block" color="tertiary" (click)="confirmarSolicitacaoTroca()" [disabled]="salvando || !nomeSolicitante">
         Enviar Solicitação
       </ion-button>
     </ion-content>
