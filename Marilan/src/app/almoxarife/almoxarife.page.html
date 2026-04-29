@@ -117,6 +117,7 @@
     </ion-header>
 
     <ion-content class="ion-padding">
+
       <ion-item>
         <ion-input
           label="CPF" labelPlacement="stacked"
@@ -131,22 +132,25 @@
         <ion-input
           label="Nome" labelPlacement="stacked"
           [(ngModel)]="dadosRetirada.usuario_nome"
-          [readonly]="true" placeholder="Preenchido automaticamente">
+          [readonly]="true"
+          placeholder="Preenchido automaticamente">
         </ion-input>
       </ion-item>
 
+      <!-- ✅ Área agora é editável — o usuário digita onde vai usar a ferramenta -->
       <ion-item>
         <ion-input
-          label="Área" labelPlacement="stacked"
+          label="Área de uso" labelPlacement="stacked"
           [(ngModel)]="dadosRetirada.usuario_area"
-          [readonly]="true" placeholder="Preenchido automaticamente">
+          placeholder="Ex: Linha 3, Caldeiraria, Elétrica...">
         </ion-input>
       </ion-item>
 
       <ion-item>
         <ion-input
           label="Ordem de Serviço" labelPlacement="stacked"
-          [(ngModel)]="dadosRetirada.ordem_servico">
+          [(ngModel)]="dadosRetirada.ordem_servico"
+          placeholder="Ex: OS-2024-001">
         </ion-input>
       </ion-item>
 
@@ -157,6 +161,7 @@
       <ion-button expand="block" (click)="confirmarRetirada()" [disabled]="salvando">
         Confirmar
       </ion-button>
+
     </ion-content>
   </ng-template>
 </ion-modal>

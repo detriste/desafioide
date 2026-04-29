@@ -5,17 +5,27 @@ import { IonicModule } from '@ionic/angular';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 
+export interface EmUsoItem {
+  ferramenta_nome:   string;
+  ferramenta_codigo: string;
+  manutentor_nome:   string;
+  manutentor_area:   string;
+  ordem_servico:     string;
+  data_retirada:     string;
+}
+
 export interface DashboardData {
   periodo: { inicio: string; fim: string };
   totais: {
-    total_retiradas: number;
-    total_devolucoes: number;
+    total_retiradas:   number;
+    total_devolucoes:  number;
     total_manutencoes: number;
-    total_liberacoes: number;
+    total_liberacoes:  number;
   };
   maisUsadas:       { nome: string; total: number }[];
   maisManutencao:   { nome: string; total: number }[];
   maisManutentores: { nome: string; area: string; total: number }[];
+  emUso:            EmUsoItem[];
 }
 
 @Component({
@@ -35,7 +45,7 @@ export class DashboardPage implements OnInit {
   dataInicio: string = '';
   dataFim: string    = '';
 
-  secaoAtiva: 'uso' | 'manutencao' | 'manutentores' = 'uso';
+  secaoAtiva: 'uso' | 'manutencao' | 'manutentores' | 'em_uso' = 'uso';
 
   constructor(private http: HttpClient, private router: Router) {}
 
@@ -67,12 +77,30 @@ export class DashboardPage implements OnInit {
     });
   }
 
+  // ✅ Método auxiliar — usado no HTML para evitar TS2532
+  // Garante que dados e emUso existem e têm itens antes de renderizar
+  temEmUso(): boolean {
+    return !!(this.dados && this.dados.emUso && this.dados.emUso.length > 0);
+  }
+
   barWidth(valor: number, lista: { total: number }[]): string {
     const max = Math.max(...lista.map(i => i.total), 1);
     return `${Math.round((valor / max) * 100)}%`;
   }
 
-  // ✅ Método adicionado — estava no HTML mas faltava no .ts
+  diasEmUso(dataRetirada: string): number {
+    const retirada = new Date(dataRetirada);
+    const hoje     = new Date();
+    const diff     = hoje.getTime() - retirada.getTime();
+    return Math.floor(diff / (1000 * 60 * 60 * 24));
+  }
+
+  corDias(dias: number): string {
+    if (dias >= 7) return 'danger';
+    if (dias >= 3) return 'warning';
+    return 'success';
+  }
+
   irPara(rota: string) {
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();

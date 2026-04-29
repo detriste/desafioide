@@ -68,7 +68,6 @@ export class AlmoxarifePage implements OnInit {
     this.carregarFerramentas();
   }
 
-  // ── Navegação da navbar — blura o foco antes de navegar para evitar aria-hidden ──
   irPara(rota: string) {
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
@@ -131,6 +130,7 @@ export class AlmoxarifePage implements OnInit {
   abrirModalRetirada(f: Ferramenta) {
     this.ferramentaSelecionada = f;
     this.erroModal = '';
+    // ✅ área começa vazia para o usuário preencher manualmente
     this.dadosRetirada = { cpf: '', usuario_nome: '', usuario_area: '', ordem_servico: '' };
     this.descricaoManutencao = '';
     this.modalRetiradaAberto = true;
@@ -169,22 +169,22 @@ export class AlmoxarifePage implements OnInit {
     this.erroModal = '';
     this.http.get<any>(`${this.API}/usuarios/cpf/${cpf}`).subscribe({
       next: (res) => {
+        // ✅ só preenche o nome automaticamente; área fica livre para o usuário
         this.dadosRetirada.usuario_nome = res.nome;
-        this.dadosRetirada.usuario_area = res.area;
       },
       error: () => {
         this.erroModal = 'Usuário não encontrado.';
         this.dadosRetirada.usuario_nome = '';
-        this.dadosRetirada.usuario_area = '';
       }
     });
   }
 
   confirmarRetirada() {
     const f = this.ferramentaSelecionada!;
-    if (!this.dadosRetirada.cpf?.trim()) { this.erroModal = 'Informe o CPF.'; return; }
+    if (!this.dadosRetirada.cpf?.trim())          { this.erroModal = 'Informe o CPF.'; return; }
     if (!this.dadosRetirada.usuario_nome?.trim()) { this.erroModal = 'CPF não encontrado.'; return; }
-    if (!this.dadosRetirada.usuario_area) { this.erroModal = 'Área não encontrada.'; return; }
+    if (!this.dadosRetirada.usuario_area?.trim()) { this.erroModal = 'Informe a área.'; return; }
+    if (!this.dadosRetirada.ordem_servico?.trim()) { this.erroModal = 'Informe a Ordem de Serviço.'; return; }
 
     this.salvando = true;
     this.http.post(`${this.API}/ferramentas/${f.id}/retirar`, {
