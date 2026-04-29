@@ -4,7 +4,7 @@ import { PreloadAllModules, RouterModule, Routes } from '@angular/router';
 const routes: Routes = [
   {
     path: 'home',
-    loadChildren: () => import('./home/home.module').then( m => m.HomePageModule)
+    loadChildren: () => import('./home/home.module').then(m => m.HomePageModule)
   },
   {
     path: '',
@@ -13,20 +13,24 @@ const routes: Routes = [
   },
   {
     path: 'manutentores',
-    loadChildren: () => import('./manutentores/manutentores.module').then( m => m.ManutentoresPageModule)
+    loadChildren: () => import('./manutentores/manutentores.module').then(m => m.ManutentoresPageModule)
   },
   {
     path: 'almoxarife',
-    loadChildren: () => import('./almoxarife/almoxarife.module').then( m => m.AlmoxarifePageModule)
-  },  {
+    loadChildren: () => import('./almoxarife/almoxarife.module').then(m => m.AlmoxarifePageModule)
+  },
+  {
     path: 'login-manutentor',
-    loadChildren: () => import('./login-manutentor/login-manutentor.module').then( m => m.LoginManutentorPageModule)
+    loadChildren: () => import('./login-manutentor/login-manutentor.module').then(m => m.LoginManutentorPageModule)
   },
   {
     path: 'login-almoxarife',
-    loadChildren: () => import('./login-almoxarife/login-almoxarife.module').then( m => m.LoginAlmoxarifePageModule)
+    loadChildren: () => import('./login-almoxarife/login-almoxarife.module').then(m => m.LoginAlmoxarifePageModule)
   },
-
+  {
+    path: 'dashboard',
+    loadChildren: () => import('./dash-board/dash-board.module').then(m => m.DashboardPageModule)
+  },
 ];
 
 @NgModule({
@@ -35,4 +39,4 @@ const routes: Routes = [
   ],
   exports: [RouterModule]
 })
-export class AppRoutingModule { }
+export class AppRoutingModule {}

@@ -1,0 +1,244 @@
+<ion-header [translucent]="true">
+  <ion-toolbar color="secondary">
+    <ion-title>Dashboard</ion-title>
+    <ion-buttons slot="end">
+      <ion-button fill="clear" (click)="sair()">
+        <ion-icon name="log-out-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+
+  <!-- FILTRO DE PERÍODO -->
+  <div class="filtro-periodo">
+    <div class="filtro-row">
+      <div class="filtro-campo">
+        <label>De</label>
+        <ion-input type="date" [(ngModel)]="dataInicio" fill="outline" class="date-input"></ion-input>
+      </div>
+      <div class="filtro-campo">
+        <label>Até</label>
+        <ion-input type="date" [(ngModel)]="dataFim" fill="outline" class="date-input"></ion-input>
+      </div>
+      <ion-button (click)="carregar()" [disabled]="carregando" color="secondary" class="btn-filtrar">
+        <ion-icon name="search-outline" slot="start"></ion-icon>
+        Filtrar
+      </ion-button>
+    </div>
+  </div>
+
+  <!-- LOADING -->
+  <div class="loading-wrapper" *ngIf="carregando">
+    <ion-spinner name="crescent" color="secondary"></ion-spinner>
+    <p>Carregando dados...</p>
+  </div>
+
+  <ng-container *ngIf="!carregando && dados">
+
+    <!-- CARDS -->
+    <div class="totais-grid">
+      <div class="total-card retiradas">
+        <ion-icon name="arrow-up-circle-outline"></ion-icon>
+        <span class="total-num">{{ dados.totais.total_retiradas }}</span>
+        <span class="total-label">Retiradas</span>
+      </div>
+      <div class="total-card devolucoes">
+        <ion-icon name="arrow-down-circle-outline"></ion-icon>
+        <span class="total-num">{{ dados.totais.total_devolucoes }}</span>
+        <span class="total-label">Devoluções</span>
+      </div>
+      <div class="total-card manutencoes">
+        <ion-icon name="construct-outline"></ion-icon>
+        <span class="total-num">{{ dados.totais.total_manutencoes }}</span>
+        <span class="total-label">Manutenções</span>
+      </div>
+      <div class="total-card liberacoes">
+        <ion-icon name="checkmark-circle-outline"></ion-icon>
+        <span class="total-num">{{ dados.totais.total_liberacoes }}</span>
+        <span class="total-label">Liberações</span>
+      </div>
+    </div>
+
+    <!-- SEGMENTO (AJUSTADO) -->
+    <ion-segment [(ngModel)]="secaoAtiva" class="segmento" scrollable="true">
+      <ion-segment-button value="uso">
+        <ion-label>Mais Usadas</ion-label>
+      </ion-segment-button>
+
+      <ion-segment-button value="manutencao">
+        <ion-label>Manutenção</ion-label>
+      </ion-segment-button>
+
+      <ion-segment-button value="manutentores">
+        <ion-label>Manutentores</ion-label>
+      </ion-segment-button>
+
+      <!-- 🔥 Badge ao lado do texto -->
+      <ion-segment-button value="em_uso">
+        <ion-label class="label-com-badge">
+          Em uso
+          <span class="badge-inline" *ngIf="temEmUso()">
+            {{ dados.emUso.length }}
+          </span>
+        </ion-label>
+      </ion-segment-button>
+    </ion-segment>
+
+    <!-- SEÇÃO: MAIS USADAS -->
+    <div class="secao" *ngIf="secaoAtiva === 'uso'">
+      <div class="secao-header">
+        <ion-icon name="hammer-outline" color="success"></ion-icon>
+        <h2>Ferramentas mais retiradas</h2>
+      </div>
+
+      <div class="empty-state" *ngIf="dados.maisUsadas.length === 0">
+        <ion-icon name="bar-chart-outline"></ion-icon>
+        <p>Nenhuma retirada no período.</p>
+      </div>
+
+      <div class="grafico-lista" *ngIf="dados.maisUsadas.length > 0">
+        <div class="grafico-item" *ngFor="let item of dados.maisUsadas; let i = index">
+          <div class="grafico-rank">{{ i + 1 }}</div>
+          <div class="grafico-info">
+            <div class="grafico-nome">{{ item.nome }}</div>
+            <div class="grafico-barra-wrapper">
+              <div class="grafico-barra barra-uso"
+                   [style.width]="barWidth(item.total, dados.maisUsadas)">
+              </div>
+            </div>
+          </div>
+          <div class="grafico-valor">{{ item.total }}x</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SEÇÃO: MANUTENÇÃO -->
+    <div class="secao" *ngIf="secaoAtiva === 'manutencao'">
+      <div class="secao-header">
+        <ion-icon name="warning-outline" color="danger"></ion-icon>
+        <h2>Ferramentas com mais manutenções</h2>
+      </div>
+
+      <div class="empty-state" *ngIf="dados.maisManutencao.length === 0">
+        <ion-icon name="bar-chart-outline"></ion-icon>
+        <p>Nenhuma manutenção no período.</p>
+      </div>
+
+      <div class="grafico-lista" *ngIf="dados.maisManutencao.length > 0">
+        <div class="grafico-item" *ngFor="let item of dados.maisManutencao; let i = index">
+          <div class="grafico-rank">{{ i + 1 }}</div>
+          <div class="grafico-info">
+            <div class="grafico-nome">{{ item.nome }}</div>
+            <div class="grafico-barra-wrapper">
+              <div class="grafico-barra barra-manutencao"
+                   [style.width]="barWidth(item.total, dados.maisManutencao)">
+              </div>
+            </div>
+          </div>
+          <div class="grafico-valor">{{ item.total }}x</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SEÇÃO: MANUTENTORES -->
+    <div class="secao" *ngIf="secaoAtiva === 'manutentores'">
+      <div class="secao-header">
+        <ion-icon name="people-outline" color="warning"></ion-icon>
+        <h2>Manutentores que mais retiraram</h2>
+      </div>
+
+      <div class="empty-state" *ngIf="dados.maisManutentores.length === 0">
+        <ion-icon name="bar-chart-outline"></ion-icon>
+        <p>Nenhum dado no período.</p>
+      </div>
+
+      <div class="grafico-lista" *ngIf="dados.maisManutentores.length > 0">
+        <div class="grafico-item" *ngFor="let item of dados.maisManutentores; let i = index">
+          <div class="grafico-rank">{{ i + 1 }}</div>
+          <div class="grafico-info">
+            <div class="grafico-nome">
+              {{ item.nome }}
+              <span class="area-badge">{{ item.area }}</span>
+            </div>
+            <div class="grafico-barra-wrapper">
+              <div class="grafico-barra barra-manutentor"
+                   [style.width]="barWidth(item.total, dados.maisManutentores)">
+              </div>
+            </div>
+          </div>
+          <div class="grafico-valor">{{ item.total }}x</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SEÇÃO: EM USO -->
+    <div class="secao" *ngIf="secaoAtiva === 'em_uso'">
+      <div class="secao-header">
+        <ion-icon name="time-outline" color="warning"></ion-icon>
+        <h2>Ferramentas não devolvidas</h2>
+      </div>
+
+      <div class="empty-state" *ngIf="!temEmUso()">
+        <ion-icon name="checkmark-circle-outline" color="success"></ion-icon>
+        <p>Todas as ferramentas foram devolvidas!</p>
+      </div>
+
+      <div class="em-uso-lista" *ngIf="temEmUso()">
+        <ion-card class="em-uso-card" *ngFor="let item of dados.emUso">
+          <ion-card-content>
+
+            <div class="eu-ferramenta">
+              <ion-icon name="hammer-outline"></ion-icon>
+              <div>
+                <div class="eu-nome">{{ item.ferramenta_nome }}</div>
+                <div class="eu-codigo">{{ item.ferramenta_codigo }}</div>
+              </div>
+            </div>
+
+            <div class="eu-divider"></div>
+
+            <div class="eu-linha">
+              <ion-icon name="person-outline"></ion-icon>
+              <span>{{ item.manutentor_nome }}</span>
+            </div>
+
+            <div class="eu-linha">
+              <ion-icon name="location-outline"></ion-icon>
+              <span>{{ item.manutentor_area }}</span>
+            </div>
+
+            <div class="eu-linha" *ngIf="item.ordem_servico">
+              <ion-icon name="document-text-outline"></ion-icon>
+              <span>{{ item.ordem_servico }}</span>
+            </div>
+
+            <div class="eu-dias">
+              <ion-badge [color]="corDias(diasEmUso(item.data_retirada))">
+                {{ diasEmUso(item.data_retirada) === 0
+                    ? 'Retirado hoje'
+                    : diasEmUso(item.data_retirada) + ' dia(s) em uso' }}
+              </ion-badge>
+            </div>
+
+          </ion-card-content>
+        </ion-card>
+      </div>
+    </div>
+
+  </ng-container>
+
+</ion-content>
+
+<!-- NAVBAR -->
+<ion-tab-bar slot="bottom" class="navbar">
+  <ion-tab-button (click)="irPara('almoxarife')">
+    <ion-icon name="cube-outline"></ion-icon>
+    <ion-label>Ferramentas</ion-label>
+  </ion-tab-button>
+  <ion-tab-button class="tab-ativo" (click)="irPara('dashboard')">
+    <ion-icon name="bar-chart-outline"></ion-icon>
+    <ion-label>Dashboard</ion-label>
+  </ion-tab-button>
+</ion-tab-bar>
