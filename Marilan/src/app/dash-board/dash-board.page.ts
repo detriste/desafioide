@@ -13,18 +13,15 @@ export interface DashboardData {
     total_manutencoes: number;
     total_liberacoes: number;
   };
-  maisUsadas:      { nome: string; total: number }[];
-  maisManutencao:  { nome: string; total: number }[];
-  maisManutentores:{ nome: string; area: string; total: number }[];
+  maisUsadas:       { nome: string; total: number }[];
+  maisManutencao:   { nome: string; total: number }[];
+  maisManutentores: { nome: string; area: string; total: number }[];
 }
 
 @Component({
   selector: 'app-dashboard',
-
-  // ✅ CORRIGIDO
   templateUrl: './dash-board.page.html',
   styleUrls: ['./dash-board.page.scss'],
-
   standalone: true,
   imports: [CommonModule, FormsModule, IonicModule]
 })
@@ -73,6 +70,16 @@ export class DashboardPage implements OnInit {
   barWidth(valor: number, lista: { total: number }[]): string {
     const max = Math.max(...lista.map(i => i.total), 1);
     return `${Math.round((valor / max) * 100)}%`;
+  }
+
+  // ✅ Método adicionado — estava no HTML mas faltava no .ts
+  irPara(rota: string) {
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+    setTimeout(() => {
+      this.router.navigateByUrl('/' + rota, { replaceUrl: true });
+    }, 50);
   }
 
   sair() {
