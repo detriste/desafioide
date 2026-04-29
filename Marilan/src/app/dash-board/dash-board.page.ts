@@ -13,15 +13,18 @@ export interface DashboardData {
     total_manutencoes: number;
     total_liberacoes: number;
   };
-  maisUsadas:       { nome: string; total: number }[];
-  maisManutencao:   { nome: string; total: number }[];
-  maisManutentores: { nome: string; area: string; total: number }[];
+  maisUsadas:      { nome: string; total: number }[];
+  maisManutencao:  { nome: string; total: number }[];
+  maisManutentores:{ nome: string; area: string; total: number }[];
 }
 
 @Component({
   selector: 'app-dashboard',
-  templateUrl: './dashboard.page.html',
-  styleUrls: ['./dashboard.page.scss'],
+
+  // ✅ CORRIGIDO
+  templateUrl: './dash-board.page.html',
+  styleUrls: ['./dash-board.page.scss'],
+
   standalone: true,
   imports: [CommonModule, FormsModule, IonicModule]
 })
@@ -32,8 +35,8 @@ export class DashboardPage implements OnInit {
   carregando = false;
   dados: DashboardData | null = null;
 
-  dataInicio = '';
-  dataFim    = '';
+  dataInicio: string = '';
+  dataFim: string    = '';
 
   secaoAtiva: 'uso' | 'manutencao' | 'manutentores' = 'uso';
 
@@ -54,27 +57,22 @@ export class DashboardPage implements OnInit {
     this.carregando = true;
     this.dados = null;
 
-    this.http.get<DashboardData>(
-      `${this.API}/dashboard?inicio=${this.dataInicio}&fim=${this.dataFim}`
-    ).subscribe({
-      next:  (res) => { this.dados = res; this.carregando = false; },
-      error: ()    => { this.carregando = false; }
+    const params = `inicio=${this.dataInicio}&fim=${this.dataFim}`;
+
+    this.http.get<DashboardData>(`${this.API}/dashboard?${params}`).subscribe({
+      next: (res) => {
+        this.dados = res;
+        this.carregando = false;
+      },
+      error: () => {
+        this.carregando = false;
+      }
     });
   }
 
   barWidth(valor: number, lista: { total: number }[]): string {
     const max = Math.max(...lista.map(i => i.total), 1);
     return `${Math.round((valor / max) * 100)}%`;
-  }
-
-  // ── Navegação da navbar — blura o foco antes de navegar ──────────────────
-  irPara(rota: string) {
-    if (document.activeElement instanceof HTMLElement) {
-      document.activeElement.blur();
-    }
-    setTimeout(() => {
-      this.router.navigateByUrl('/' + rota, { replaceUrl: true });
-    }, 50);
   }
 
   sair() {
