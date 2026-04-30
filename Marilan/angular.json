@@ -57,7 +57,8 @@
               "outputHashing": "all"
             },
             "development": {
-              "buildOptimizer": false,
+             "buildOptimizer": true,
+"allowedCommonJsDependencies": ["xlsx"],
               "optimization": false,
               "vendorChunk": true,
               "extractLicenses": false,

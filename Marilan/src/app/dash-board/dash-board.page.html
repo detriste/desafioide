@@ -243,7 +243,18 @@
 
 </ion-content>
 
+<!-- BOTAO EXPORTAR EXCEL -->
+<div class="exportar-wrapper">
+  <ion-button expand="block" color="success" (click)="exportarExcel()" class="btn-exportar">
+    <ion-icon name="download-outline" slot="start"></ion-icon>
+    Exportar para Excel
+  </ion-button>
+</div>
+<!-- FIM BOTAO EXPORTAR EXCEL -->
+
 <!-- NAVBAR -->
+
+
 <ion-tab-bar slot="bottom" class="navbar">
   <ion-tab-button (click)="irPara('almoxarife')">
     <ion-icon name="cube-outline"></ion-icon>
