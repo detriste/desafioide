@@ -144,14 +144,24 @@ salvandoSolicitacao = false;
   this.erroSolicitacao = '';
   this.modalSolicitarRetiradaAberto = true;
 }
-
 buscarNomePorCracha() {
   const cracha = this.dadosSolicitacao.cracha?.trim();
   if (!cracha) return;
   this.erroSolicitacao = '';
+
+  // ✅ Verifica se o crachá digitado é o do próprio usuário logado
+  if (cracha !== this.usuarioLogado?.cracha) {
+    this.erroSolicitacao = 'Este crachá não é o seu. Use seu próprio crachá.';
+    this.dadosSolicitacao.nome = '';
+    return;
+  }
+
   this.http.get<any>(`${this.API}/usuarios/cracha/${cracha}`).subscribe({
     next: (res) => { this.dadosSolicitacao.nome = res.nome; },
-    error: () => { this.erroSolicitacao = 'Crachá não encontrado.'; this.dadosSolicitacao.nome = ''; }
+    error: () => { 
+      this.erroSolicitacao = 'Crachá não encontrado.'; 
+      this.dadosSolicitacao.nome = ''; 
+    }
   });
 }
 
@@ -308,38 +318,37 @@ confirmarSolicitacaoRetirada() {
       error: () => this.exibirToast('Erro ao carregar atenções.', 'danger')
     });
   }
+buscarSolicitantePorCracha() {
+  const cracha = this.crachasSolicitante?.trim();
+  if (!cracha) return;
+  this.erroModal = '';
 
-  buscarSolicitantePorCracha() {
-    const cracha = this.crachasSolicitante?.trim();
-    if (!cracha) return;
-    this.erroModal = '';
+  // ✅ Verifica se o crachá digitado é o do próprio usuário logado
+  if (cracha !== this.usuarioLogado?.cracha) {
+    this.erroModal = 'Este crachá não é o seu. Use seu próprio crachá.';
+    this.nomeSolicitante = '';
+    this.oficinaSolicitante = '';
+    return;
+  }
 
-    if (cracha === this.ferramentaSelecionada?.manutentor?.cracha ||
-        this.ferramentaSelecionada?.manutentor?.nome === this.usuarioLogado?.nome) {
-      this.erroModal = 'Você não pode solicitar uma troca consigo mesmo.';
-      this.nomeSolicitante = '';
-      this.oficinaSolicitante = '';
-      return;
-    }
-
-    this.http.get<any>(`${this.API}/usuarios/cracha/${cracha}`).subscribe({
-      next: (res) => {
-        if (res.nome === this.ferramentaSelecionada?.manutentor?.nome) {
-          this.erroModal = 'Você não pode solicitar uma troca consigo mesmo.';
-          this.nomeSolicitante = '';
-          this.oficinaSolicitante = '';
-          return;
-        }
-        this.nomeSolicitante = res.nome;
-        this.oficinaSolicitante = res.area;
-      },
-      error: () => {
-        this.erroModal = 'Crachá não encontrado.';
+  this.http.get<any>(`${this.API}/usuarios/cracha/${cracha}`).subscribe({
+    next: (res) => {
+      if (res.nome === this.ferramentaSelecionada?.manutentor?.nome) {
+        this.erroModal = 'Você não pode solicitar uma troca consigo mesmo.';
         this.nomeSolicitante = '';
         this.oficinaSolicitante = '';
+        return;
       }
-    });
-  }
+      this.nomeSolicitante = res.nome;
+      this.oficinaSolicitante = res.area;
+    },
+    error: () => {
+      this.erroModal = 'Crachá não encontrado.';
+      this.nomeSolicitante = '';
+      this.oficinaSolicitante = '';
+    }
+  });
+}
 
   // ── Solicitar Troca ───────────────────────────────────────────────────────
   abrirModalTroca(f: Ferramenta) {
