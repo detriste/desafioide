@@ -1,3 +1,39 @@
+// ── Header ────────────────────────────────────────────────────────────────────
+.header-custom {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-left: 16px;
+  max-width: 70%;
+}
+
+.ola-text {
+  font-size: 16px;
+  font-weight: 500;
+  white-space: nowrap;
+  color: #fff;
+}
+
+:host ::ng-deep .logo-header {
+  height: 20px !important;
+  width: auto !important;
+  max-height: 20px !important;
+}
+
+@media (max-width: 400px) {
+  .logo-header { height: 10px !important; }
+  .ola-text    { font-size: 14px; }
+}
+
+ion-toolbar {
+  --min-height: 44px;
+}
+
+ion-toolbar .header-custom {
+  display: flex;
+  align-items: center;
+}
+
 // ── Busca e filtros ───────────────────────────────────────────────────────────
 .search-bar {
   padding: 12px 16px 4px;

@@ -84,7 +84,14 @@
           <p *ngIf="f.manutentor.ordemServico"><strong>OS:</strong> {{ f.manutentor.ordemServico }}</p>
         </div>
 
-        <!-- DISPONÍVEL: só leitura, sem botões -->
+       <!-- DISPONÍVEL: botão solicitar retirada -->
+<div *ngIf="abaAtiva === 'disponivel'" style="margin-top:10px;">
+  <ion-button size="small" color="success"
+    (click)="abrirSolicitarRetirada(f); $event.stopPropagation()">
+    <ion-icon name="arrow-up-circle-outline" slot="start"></ion-icon>
+    Solicitar Retirada
+  </ion-button>
+</div>
 
         <!-- EM USO: botões de ação -->
         <div *ngIf="abaAtiva === 'em_uso'" style="margin-top:10px; display:flex; gap:6px; flex-wrap:wrap;">
@@ -305,6 +312,58 @@ maxlength="4"
         </ion-card-content>
       </ion-card>
 
+    </ion-content>
+  </ng-template>
+</ion-modal>
+<!-- MODAL SOLICITAR RETIRADA -->
+<ion-modal [isOpen]="modalSolicitarRetiradaAberto" (didDismiss)="fecharModais()">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar color="success">
+        <ion-title>Solicitar Retirada</ion-title>
+        <ion-buttons slot="end">
+          <ion-button (click)="fecharModais()"><ion-icon name="close-outline"></ion-icon></ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content class="ion-padding">
+      <p *ngIf="ferramentaSelecionada"><strong>{{ ferramentaSelecionada.nome }}</strong></p>
+
+      <ion-item>
+        <ion-input label="Seu Crachá" labelPlacement="stacked"
+          [(ngModel)]="dadosSolicitacao.cracha"
+          placeholder="0000" maxlength="4"
+          (ionBlur)="buscarNomePorCracha()">
+        </ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-input label="Seu nome" labelPlacement="stacked"
+          [(ngModel)]="dadosSolicitacao.nome" [readonly]="true"
+          placeholder="Preenchido automaticamente">
+        </ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-input label="Área de uso" labelPlacement="stacked"
+          [(ngModel)]="dadosSolicitacao.area"
+          placeholder="Ex: Linha 3, Caldeiraria...">
+        </ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-input label="Ordem de Serviço" labelPlacement="stacked"
+          [(ngModel)]="dadosSolicitacao.ordem_servico"
+          placeholder="Ex: OS-2024-001">
+        </ion-input>
+      </ion-item>
+
+      <ion-text color="danger" *ngIf="erroSolicitacao"><p>{{ erroSolicitacao }}</p></ion-text>
+
+      <ion-button expand="block" color="success" (click)="confirmarSolicitacaoRetirada()" [disabled]="salvandoSolicitacao">
+        <ion-spinner *ngIf="salvandoSolicitacao" name="crescent"></ion-spinner>
+        <span *ngIf="!salvandoSolicitacao">Enviar Solicitação</span>
+      </ion-button>
     </ion-content>
   </ng-template>
 </ion-modal>

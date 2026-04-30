@@ -1,12 +1,25 @@
-<ion-header [translucent]="true">
+<ion-header>
+
+  <!-- HEADER PRINCIPAL -->
   <ion-toolbar color="secondary">
-    <ion-title>Dashboard</ion-title>
+    <div class="header-custom">
+      <span class="ola-text">
+        Olá, {{ usuarioLogado?.nome?.split(' ')[0] }}
+      </span>
+      <img
+        src="https://www.grupomarilan.com.br/images/marcas/0291553001753273423.webp"
+        alt="Marilan"
+        class="logo-header"
+      />
+    </div>
+
     <ion-buttons slot="end">
       <ion-button fill="clear" (click)="sair()">
         <ion-icon name="log-out-outline"></ion-icon>
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
+
 </ion-header>
 
 <ion-content [fullscreen]="true">
@@ -61,7 +74,7 @@
       </div>
     </div>
 
-    <!-- SEGMENTO (AJUSTADO) -->
+    <!-- SEGMENTO -->
     <ion-segment [(ngModel)]="secaoAtiva" class="segmento" scrollable="true">
       <ion-segment-button value="uso">
         <ion-label>Mais Usadas</ion-label>
@@ -75,7 +88,6 @@
         <ion-label>Manutentores</ion-label>
       </ion-segment-button>
 
-      <!-- 🔥 Badge ao lado do texto -->
       <ion-segment-button value="em_uso">
         <ion-label class="label-com-badge">
           Em uso

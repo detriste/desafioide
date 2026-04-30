@@ -47,6 +47,9 @@ export class AlmoxarifePage implements OnInit {
     ordem_servico: ''
   };
 
+  solicitacoesPendentes: any[] = [];
+  modalSolicitacoesAberto = false;
+
   descricaoManutencao = '';
   salvando = false;
 
@@ -57,6 +60,8 @@ export class AlmoxarifePage implements OnInit {
   ferramentasFiltradas: Ferramenta[] = [];
   carregando = false;
 
+  usuarioLogado: any = null;
+
   private API = 'http://localhost:3000/api';
 
   constructor(
@@ -66,7 +71,10 @@ export class AlmoxarifePage implements OnInit {
   ) {}
 
   ngOnInit() {
+    const raw = sessionStorage.getItem('usuario');
+    if (raw) this.usuarioLogado = JSON.parse(raw);
     this.carregarFerramentas();
+    this.carregarSolicitacoes();
   }
 
   irPara(rota: string) {
@@ -145,9 +153,10 @@ export class AlmoxarifePage implements OnInit {
   }
 
   fecharModais() {
-    this.modalRetiradaAberto   = false;
-    this.modalManutencaoAberto = false;
-    this.ferramentaSelecionada = null;
+    this.modalSolicitacoesAberto = false;
+    this.modalRetiradaAberto     = false;
+    this.modalManutencaoAberto   = false;
+    this.ferramentaSelecionada   = null;
     this.erroModal = '';
     this.salvando  = false;
   }
@@ -218,6 +227,39 @@ export class AlmoxarifePage implements OnInit {
   async exibirToast(message: string, color: string) {
     const toast = await this.toastCtrl.create({ message, color, duration: 2500, position: 'bottom' });
     await toast.present();
+  }
+
+  carregarSolicitacoes() {
+    this.http.get<any[]>(`${this.API}/solicitacoes/pendentes`).subscribe({
+      next: (dados) => this.solicitacoesPendentes = dados,
+      error: () => {}
+    });
+  }
+
+  abrirSolicitacoes() {
+    this.carregarSolicitacoes();
+    this.modalSolicitacoesAberto = true;
+  }
+
+  aprovarSolicitacao(s: any) {
+    this.http.post(`${this.API}/solicitacoes/${s.id}/aprovar`, {}).subscribe({
+      next: () => {
+        this.solicitacoesPendentes = this.solicitacoesPendentes.filter(x => x.id !== s.id);
+        this.carregarFerramentas();
+        this.exibirToast(`Retirada de "${s.ferramenta_nome}" aprovada.`, 'success');
+      },
+      error: (err) => this.exibirToast(err.error?.erro || 'Erro ao aprovar.', 'danger')
+    });
+  }
+
+  recusarSolicitacao(s: any) {
+    this.http.post(`${this.API}/solicitacoes/${s.id}/recusar`, {}).subscribe({
+      next: () => {
+        this.solicitacoesPendentes = this.solicitacoesPendentes.filter(x => x.id !== s.id);
+        this.exibirToast('Solicitação recusada.', 'medium');
+      },
+      error: () => this.exibirToast('Erro ao recusar.', 'danger')
+    });
   }
 
   sair() {

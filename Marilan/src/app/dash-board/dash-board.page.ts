@@ -47,9 +47,14 @@ export class DashboardPage implements OnInit {
 
   secaoAtiva: 'uso' | 'manutencao' | 'manutentores' | 'em_uso' = 'uso';
 
+  usuarioLogado: any = null;
+
   constructor(private http: HttpClient, private router: Router) {}
 
   ngOnInit() {
+    const raw = sessionStorage.getItem('usuario');
+    if (raw) this.usuarioLogado = JSON.parse(raw);
+
     const hoje = new Date();
     const ha30 = new Date();
     ha30.setDate(hoje.getDate() - 30);

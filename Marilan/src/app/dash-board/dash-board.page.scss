@@ -1,3 +1,39 @@
+// ── Header ────────────────────────────────────────────────────────────────────
+.header-custom {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-left: 16px;
+  max-width: 70%;
+}
+
+.ola-text {
+  font-size: 16px;
+  font-weight: 500;
+  white-space: nowrap;
+  color: #fff;
+}
+
+:host ::ng-deep .logo-header {
+  height: 20px !important;
+  width: auto !important;
+  max-height: 20px !important;
+}
+
+@media (max-width: 400px) {
+  .logo-header { height: 10px !important; }
+  .ola-text    { font-size: 14px; }
+}
+
+ion-toolbar {
+  --min-height: 44px;
+}
+
+ion-toolbar .header-custom {
+  display: flex;
+  align-items: center;
+}
+
 // ── Filtro de período ─────────────────────────────────────────────────────────
 .filtro-periodo {
   padding: 16px 16px 8px;
@@ -83,9 +119,9 @@
   }
 
   &.retiradas  { background: rgba(var(--ion-color-success-rgb), 0.15); color: #4caf50; }
-&.devolucoes { background: rgba(var(--ion-color-primary-rgb), 0.15); color: #64b5f6; }
-&.manutencoes{ background: rgba(var(--ion-color-danger-rgb),  0.15); color: #ef5350; }
-&.liberacoes { background: rgba(var(--ion-color-warning-rgb), 0.15); color: #ffb300; }
+  &.devolucoes { background: rgba(var(--ion-color-primary-rgb), 0.15); color: #64b5f6; }
+  &.manutencoes{ background: rgba(var(--ion-color-danger-rgb),  0.15); color: #ef5350; }
+  &.liberacoes { background: rgba(var(--ion-color-warning-rgb), 0.15); color: #ffb300; }
 }
 
 // ── Segmento ──────────────────────────────────────────────────────────────────
@@ -96,23 +132,21 @@
   overflow: hidden;
 
   ion-segment-button {
-  --indicator-color: var(--ion-color-secondary);
-  --color: #fff;
-  --color-checked: var(--ion-color-secondary);
-  font-size: 12px;
-  font-weight: 600;
-  min-height: 38px;
-}
+    --indicator-color: var(--ion-color-secondary);
+    --color: #fff;
+    --color-checked: var(--ion-color-secondary);
+    font-size: 12px;
+    font-weight: 600;
+    min-height: 38px;
+  }
 }
 
-// Wrapper do label + badge lado a lado
 .label-com-badge {
   display: inline-flex;
   align-items: center;
   gap: 5px;
 }
 
-// Badge numérico inline — puro CSS, sem ion-badge
 .badge-inline {
   display: inline-flex;
   align-items: center;
@@ -212,7 +246,7 @@
 .grafico-valor {
   font-size: 13px;
   font-weight: 700;
-  color: var(--ion-color-dark);
+ color: #ff6a00;
   flex-shrink: 0;
   min-width: 32px;
   text-align: right;

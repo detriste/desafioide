@@ -1,12 +1,32 @@
-<ion-header [translucent]="true">
+<ion-header>
+
+  <!-- HEADER PRINCIPAL -->
   <ion-toolbar color="secondary">
-    <ion-title>Almoxarifado</ion-title>
+    <div class="header-custom">
+      <span class="ola-text">
+        Olá, {{ usuarioLogado?.nome?.split(' ')[0] }}
+      </span>
+      <img
+        src="https://www.grupomarilan.com.br/images/marcas/0291553001753273423.webp"
+        alt="Marilan"
+        class="logo-header"
+      />
+    </div>
+
     <ion-buttons slot="end">
+      <ion-button fill="clear" (click)="abrirSolicitacoes()">
+        <ion-icon name="checkbox-outline"></ion-icon>
+        <ion-badge *ngIf="solicitacoesPendentes.length > 0" color="danger"
+          style="position:absolute;top:4px;right:4px;font-size:10px;">
+          {{ solicitacoesPendentes.length }}
+        </ion-badge>
+      </ion-button>
       <ion-button fill="clear" (click)="sair()">
         <ion-icon name="log-out-outline"></ion-icon>
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
+
 </ion-header>
 
 <ion-content [fullscreen]="true">
@@ -48,17 +68,17 @@
         <p><strong>Status:</strong> {{ getStatusLabel(f.status) }}</p>
 
         <div *ngIf="f.status === 'em_uso' && f.manutentor">
-  <p><strong>Usuário:</strong> {{ f.manutentor.nome }}</p>
-  <p><strong>Área:</strong> {{ f.manutentor.area }}</p>
-  <p *ngIf="f.manutentor.ordemServico">
-    <strong>OS:</strong> {{ f.manutentor.ordemServico }}
-  </p>
-</div>
+          <p><strong>Usuário:</strong> {{ f.manutentor.nome }}</p>
+          <p><strong>Área:</strong> {{ f.manutentor.area }}</p>
+          <p *ngIf="f.manutentor.ordemServico">
+            <strong>OS:</strong> {{ f.manutentor.ordemServico }}
+          </p>
+        </div>
 
-<div *ngIf="f.status === 'manutencao' && f.observacao" class="bloco-manutencao">
-  <ion-icon name="construct-outline" color="danger"></ion-icon>
-  <span>{{ f.observacao }}</span>
-</div>
+        <div *ngIf="f.status === 'manutencao' && f.observacao" class="bloco-manutencao">
+          <ion-icon name="construct-outline" color="danger"></ion-icon>
+          <span>{{ f.observacao }}</span>
+        </div>
 
         <!-- BOTÕES -->
         <div style="margin-top:10px; display:flex; gap:6px; flex-wrap:wrap;">
@@ -125,10 +145,10 @@
 
       <ion-item>
         <ion-input
-        label="Crachá"
-[(ngModel)]="dadosRetirada.cracha"
-placeholder="0000" maxlength="4"
-(ionBlur)="buscarUsuarioPorCracha()">
+          label="Crachá"
+          [(ngModel)]="dadosRetirada.cracha"
+          placeholder="0000" maxlength="4"
+          (ionBlur)="buscarUsuarioPorCracha()">
         </ion-input>
       </ion-item>
 
@@ -141,7 +161,6 @@ placeholder="0000" maxlength="4"
         </ion-input>
       </ion-item>
 
-      <!-- ✅ Área agora é editável — o usuário digita onde vai usar a ferramenta -->
       <ion-item>
         <ion-input
           label="Área de uso" labelPlacement="stacked"
@@ -199,6 +218,44 @@ placeholder="0000" maxlength="4"
       <ion-button expand="block" (click)="confirmarManutencao()" [disabled]="salvando">
         Enviar
       </ion-button>
+    </ion-content>
+  </ng-template>
+</ion-modal>
+
+<!-- MODAL SOLICITAÇÕES DE RETIRADA -->
+<ion-modal [isOpen]="modalSolicitacoesAberto" (didDismiss)="fecharModais()">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar color="success">
+        <ion-title>Solicitações de Retirada</ion-title>
+        <ion-buttons slot="end">
+          <ion-button (click)="fecharModais()"><ion-icon name="close-outline"></ion-icon></ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content class="ion-padding">
+
+      <div *ngIf="solicitacoesPendentes.length === 0"
+        style="text-align:center; padding:40px; color:var(--ion-color-medium)">
+        <ion-icon name="checkmark-done-outline" style="font-size:48px; display:block; margin-bottom:8px;"></ion-icon>
+        <p>Nenhuma solicitação pendente.</p>
+      </div>
+
+      <ion-card *ngFor="let s of solicitacoesPendentes">
+        <ion-card-content>
+          <p><strong>Ferramenta:</strong> {{ s.ferramenta_nome }}</p>
+          <p><strong>Manutentor:</strong> {{ s.manutentor_nome }} (Crachá: {{ s.manutentor_cracha }})</p>
+          <p><strong>Área:</strong> {{ s.manutentor_area }}</p>
+          <p><strong>OS:</strong> {{ s.ordem_servico }}</p>
+          <p style="font-size:12px; color:var(--ion-color-medium)">{{ s.criado_em | date:'dd/MM/yyyy HH:mm' }}</p>
+
+          <div style="display:flex; gap:8px; margin-top:10px;">
+            <ion-button size="small" color="success" (click)="aprovarSolicitacao(s)">Aprovar</ion-button>
+            <ion-button size="small" color="danger" fill="outline" (click)="recusarSolicitacao(s)">Recusar</ion-button>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
     </ion-content>
   </ng-template>
 </ion-modal>

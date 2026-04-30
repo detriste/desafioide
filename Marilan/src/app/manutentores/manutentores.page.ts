@@ -99,6 +99,10 @@ export class ManutentoresPage implements OnInit, OnDestroy {
   solicitanteNome = '';
   solicitanteArea = '';
   erroCrachaSolicitante = '';
+  modalSolicitarRetiradaAberto = false;
+dadosSolicitacao = { cracha: '', nome: '', area: '', ordem_servico: '' };
+erroSolicitacao = '';
+salvandoSolicitacao = false;
 
   usuarioLogado: any = null;
 
@@ -133,6 +137,53 @@ export class ManutentoresPage implements OnInit, OnDestroy {
       clearInterval(this.intervaloAtualizacao);
     }
   }
+
+  abrirSolicitarRetirada(f: Ferramenta) {
+  this.ferramentaSelecionada = f;
+  this.dadosSolicitacao = { cracha: '', nome: '', area: '', ordem_servico: '' };
+  this.erroSolicitacao = '';
+  this.modalSolicitarRetiradaAberto = true;
+}
+
+buscarNomePorCracha() {
+  const cracha = this.dadosSolicitacao.cracha?.trim();
+  if (!cracha) return;
+  this.erroSolicitacao = '';
+  this.http.get<any>(`${this.API}/usuarios/cracha/${cracha}`).subscribe({
+    next: (res) => { this.dadosSolicitacao.nome = res.nome; },
+    error: () => { this.erroSolicitacao = 'Crachá não encontrado.'; this.dadosSolicitacao.nome = ''; }
+  });
+}
+
+confirmarSolicitacaoRetirada() {
+  const d = this.dadosSolicitacao;
+  if (!d.cracha.trim()) { this.erroSolicitacao = 'Informe o crachá.'; return; }
+  if (!d.nome.trim()) { this.erroSolicitacao = 'Crachá não encontrado.'; return; }
+  if (!d.area.trim()) { this.erroSolicitacao = 'Informe a área de uso.'; return; }
+  if (!d.ordem_servico.trim()) { this.erroSolicitacao = 'Informe a OS.'; return; }
+
+  this.salvandoSolicitacao = true;
+  const f = this.ferramentaSelecionada!;
+  this.http.post(`${this.API}/solicitacoes/solicitar`, {
+    ferramenta_id:     f.id,
+    ferramenta_nome:   f.nome,
+    manutentor_cracha: d.cracha,
+    manutentor_nome:   d.nome,
+    manutentor_area:   d.area,
+    ordem_servico:     d.ordem_servico
+  }).subscribe({
+    next: () => {
+      this.modalSolicitarRetiradaAberto = false;
+      this.salvandoSolicitacao = false;
+      this.ferramentaSelecionada = null;
+      this.exibirToast('Solicitação enviada! Aguarde aprovação.', 'success');
+    },
+    error: (err) => {
+      this.erroSolicitacao = err.error?.erro || 'Erro ao solicitar.';
+      this.salvandoSolicitacao = false;
+    }
+  });
+}
 
   carregarFerramentas() {
     this.http.get<any[]>(`${this.API}/ferramentas`).subscribe({
@@ -237,6 +288,7 @@ export class ManutentoresPage implements OnInit, OnDestroy {
       next: () => {
         this.ferramentaSelecionada!.temAtencao = true;
         this.fecharModais();
+        
         this.exibirToast('Ponto de atenção registrado!', 'warning');
       },
       error: (err) => {
@@ -456,6 +508,7 @@ export class ManutentoresPage implements OnInit, OnDestroy {
 
   // ── Fechar todos os modais ────────────────────────────────────────────────
   fecharModais() {
+    this.modalSolicitarRetiradaAberto = false;
     this.modalAtencaoAberto = false;
     this.modalVerAtencaoAberto = false;
     this.modalTrocaAberto = false;
