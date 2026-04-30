@@ -194,7 +194,11 @@ confirmarSolicitacaoRetirada() {
           nome: f.nome,
           descricao: f.descricao ?? f.nome,
           quantidade: f.quantidade_estoque,
-          status: f.status,
+          status: f.status
+  ?.toLowerCase()
+  .normalize('NFD')
+  .replace(/[\u0300-\u036f]/g, '')
+  .replace(' ', '_'),
           temAtencao: this.ferramentas.find(x => x.id === f.id)?.temAtencao ?? false,
           manutentor: f.usuario_nome ? {
             nome: f.usuario_nome,

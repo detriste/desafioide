@@ -116,7 +116,11 @@ export class AlmoxarifePage implements OnInit, OnDestroy {
           nome: f.nome,
           descricao: f.descricao ?? f.nome,
           quantidade: f.quantidade_estoque,
-          status: f.status,
+        status: f.status
+  ?.toLowerCase()
+  .normalize('NFD')
+  .replace(/[\u0300-\u036f]/g, '')
+  .replace(' ', '_'),
           manutentor: f.usuario_nome ? {
             nome: f.usuario_nome,
             area: f.usuario_area,
