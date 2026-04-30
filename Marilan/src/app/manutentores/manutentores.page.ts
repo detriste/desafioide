@@ -106,7 +106,7 @@ salvandoSolicitacao = false;
 
   usuarioLogado: any = null;
 
-  private API = 'http://localhost:3000/api';
+private API = '/api';
 
   constructor(
     private router: Router,

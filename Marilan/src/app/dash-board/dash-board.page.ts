@@ -38,7 +38,7 @@ export interface DashboardData {
 })
 export class DashboardPage implements OnInit {
 
-  private API = 'http://localhost:3000/api';
+private API = '/api';
 
   carregando = false;
   dados: DashboardData | null = null;

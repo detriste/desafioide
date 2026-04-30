@@ -62,7 +62,7 @@ export class AlmoxarifePage implements OnInit, OnDestroy {
   usuarioLogado: any = null;
   private intervaloAtualizacao: any;
 
-  private API = 'http://localhost:3000/api';
+ private API = '/api';
 
   constructor(
     private router: Router,
