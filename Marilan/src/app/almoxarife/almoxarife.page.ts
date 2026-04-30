@@ -1,9 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IonicModule } from '@ionic/angular';
+import { IonicModule, ToastController } from '@ionic/angular';
 import { Router } from '@angular/router';
-import { ToastController } from '@ionic/angular';
 import { HttpClient } from '@angular/common/http';
 
 export interface Manutentor {
@@ -32,7 +31,7 @@ export interface Ferramenta {
   standalone: true,
   imports: [CommonModule, FormsModule, IonicModule]
 })
-export class AlmoxarifePage implements OnInit {
+export class AlmoxarifePage implements OnInit, OnDestroy {
 
   modalRetiradaAberto = false;
   modalManutencaoAberto = false;
@@ -53,7 +52,7 @@ export class AlmoxarifePage implements OnInit {
   descricaoManutencao = '';
   salvando = false;
 
-  termoBusca   = '';
+  termoBusca = '';
   filtroStatus = 'todos';
 
   ferramentas: Ferramenta[] = [];
@@ -61,6 +60,7 @@ export class AlmoxarifePage implements OnInit {
   carregando = false;
 
   usuarioLogado: any = null;
+  private intervaloAtualizacao: any;
 
   private API = 'http://localhost:3000/api';
 
@@ -73,8 +73,27 @@ export class AlmoxarifePage implements OnInit {
   ngOnInit() {
     const raw = sessionStorage.getItem('usuario');
     if (raw) this.usuarioLogado = JSON.parse(raw);
+
     this.carregarFerramentas();
     this.carregarSolicitacoes();
+
+    this.intervaloAtualizacao = setInterval(() => {
+      const algumModalAberto =
+        this.modalRetiradaAberto ||
+        this.modalManutencaoAberto ||
+        this.modalSolicitacoesAberto;
+
+      if (!algumModalAberto) {
+        this.carregarFerramentas();
+        this.carregarSolicitacoes();
+      }
+    }, 5000);
+  }
+
+  ngOnDestroy() {
+    if (this.intervaloAtualizacao) {
+      clearInterval(this.intervaloAtualizacao);
+    }
   }
 
   irPara(rota: string) {
@@ -92,15 +111,15 @@ export class AlmoxarifePage implements OnInit {
       next: (dados) => {
         this.ferramentas = dados.map(f => ({
           observacao: f.observacao ?? undefined,
-          id:         f.id,
-          codigo:     f.codigo,
-          nome:       f.nome,
-          descricao:  f.descricao ?? f.nome,
+          id: f.id,
+          codigo: f.codigo,
+          nome: f.nome,
+          descricao: f.descricao ?? f.nome,
           quantidade: f.quantidade_estoque,
-          status:     f.status,
+          status: f.status,
           manutentor: f.usuario_nome ? {
-            nome:         f.usuario_nome,
-            area:         f.usuario_area,
+            nome: f.usuario_nome,
+            area: f.usuario_area,
             ordemServico: f.observacao?.replace('OS: ', ''),
             dataRetirada: f.data_retirada ? new Date(f.data_retirada) : undefined,
           } : undefined,
@@ -122,8 +141,10 @@ export class AlmoxarifePage implements OnInit {
         !termo ||
         f.nome.toLowerCase().includes(termo) ||
         f.codigo.toLowerCase().includes(termo);
+
       const matchStatus =
         this.filtroStatus === 'todos' || f.status === this.filtroStatus;
+
       return matchTermo && matchStatus;
     });
   }
@@ -134,7 +155,11 @@ export class AlmoxarifePage implements OnInit {
   }
 
   getStatusLabel(status: string): string {
-    return { disponivel: 'Disponível', em_uso: 'Em Uso', manutencao: 'Manutenção' }[status] ?? status;
+    return {
+      disponivel: 'Disponível',
+      em_uso: 'Em Uso',
+      manutencao: 'Manutenção'
+    }[status] ?? status;
   }
 
   abrirModalRetirada(f: Ferramenta) {
@@ -154,11 +179,11 @@ export class AlmoxarifePage implements OnInit {
 
   fecharModais() {
     this.modalSolicitacoesAberto = false;
-    this.modalRetiradaAberto     = false;
-    this.modalManutencaoAberto   = false;
-    this.ferramentaSelecionada   = null;
+    this.modalRetiradaAberto = false;
+    this.modalManutencaoAberto = false;
+    this.ferramentaSelecionada = null;
     this.erroModal = '';
-    this.salvando  = false;
+    this.salvando = false;
   }
 
   buscarUsuarioPorCracha() {
@@ -179,53 +204,83 @@ export class AlmoxarifePage implements OnInit {
 
   confirmarRetirada() {
     const f = this.ferramentaSelecionada!;
-    if (!this.dadosRetirada.cracha?.trim())        { this.erroModal = 'Informe o Crachá.'; return; }
-    if (!this.dadosRetirada.usuario_nome?.trim())  { this.erroModal = 'Crachá não encontrado.'; return; }
-    if (!this.dadosRetirada.usuario_area?.trim())  { this.erroModal = 'Informe a área.'; return; }
+    if (!this.dadosRetirada.cracha?.trim()) { this.erroModal = 'Informe o Crachá.'; return; }
+    if (!this.dadosRetirada.usuario_nome?.trim()) { this.erroModal = 'Crachá não encontrado.'; return; }
+    if (!this.dadosRetirada.usuario_area?.trim()) { this.erroModal = 'Informe a área.'; return; }
     if (!this.dadosRetirada.ordem_servico?.trim()) { this.erroModal = 'Informe a Ordem de Serviço.'; return; }
 
     this.salvando = true;
     this.http.post(`${this.API}/ferramentas/${f.id}/retirar`, {
-      usuario_nome:  this.dadosRetirada.usuario_nome,
-      usuario_area:  this.dadosRetirada.usuario_area,
+      usuario_nome: this.dadosRetirada.usuario_nome,
+      usuario_area: this.dadosRetirada.usuario_area,
       ordem_servico: this.dadosRetirada.ordem_servico
     }).subscribe({
-      next: () => { this.fecharModais(); this.carregarFerramentas(); },
-      error: (err) => { this.erroModal = err.error?.erro || 'Erro ao retirar.'; this.salvando = false; }
+      next: () => {
+        this.fecharModais();
+        this.carregarFerramentas();
+      },
+      error: (err) => {
+        this.erroModal = err.error?.erro || 'Erro ao retirar.';
+        this.salvando = false;
+      }
     });
   }
 
   confirmarManutencao() {
     const f = this.ferramentaSelecionada!;
-    if (!this.descricaoManutencao.trim()) { this.erroModal = 'Descreva o problema.'; return; }
+    if (!this.descricaoManutencao.trim()) {
+      this.erroModal = 'Descreva o problema.';
+      return;
+    }
 
     this.salvando = true;
     this.http.post(`${this.API}/ferramentas/${f.id}/manutencao`, {
       observacao: this.descricaoManutencao
     }).subscribe({
-      next: () => { this.fecharModais(); this.carregarFerramentas(); },
-      error: (err) => { this.erroModal = err.error?.erro || 'Erro na manutenção.'; this.salvando = false; }
+      next: () => {
+        this.fecharModais();
+        this.carregarFerramentas();
+      },
+      error: (err) => {
+        this.erroModal = err.error?.erro || 'Erro na manutenção.';
+        this.salvando = false;
+      }
     });
   }
 
   executarDevolucao(f: Ferramenta) {
     this.ferramentaSelecionada = f;
     this.http.post(`${this.API}/ferramentas/${f.id}/devolver`, {}).subscribe({
-      next: () => { this.fecharModais(); this.carregarFerramentas(); },
-      error: (err) => { this.exibirToast(err.error?.erro || 'Erro ao devolver.', 'danger'); }
+      next: () => {
+        this.fecharModais();
+        this.carregarFerramentas();
+      },
+      error: (err) => {
+        this.exibirToast(err.error?.erro || 'Erro ao devolver.', 'danger');
+      }
     });
   }
 
   executarDisponibilizar(f: Ferramenta) {
     this.ferramentaSelecionada = f;
     this.http.post(`${this.API}/ferramentas/${f.id}/disponibilizar`, {}).subscribe({
-      next: () => { this.fecharModais(); this.carregarFerramentas(); },
-      error: (err) => { this.exibirToast(err.error?.erro || 'Erro ao liberar.', 'danger'); }
+      next: () => {
+        this.fecharModais();
+        this.carregarFerramentas();
+      },
+      error: (err) => {
+        this.exibirToast(err.error?.erro || 'Erro ao liberar.', 'danger');
+      }
     });
   }
 
   async exibirToast(message: string, color: string) {
-    const toast = await this.toastCtrl.create({ message, color, duration: 2500, position: 'bottom' });
+    const toast = await this.toastCtrl.create({
+      message,
+      color,
+      duration: 2500,
+      position: 'bottom'
+    });
     await toast.present();
   }
 
@@ -263,6 +318,9 @@ export class AlmoxarifePage implements OnInit {
   }
 
   sair() {
+    if (this.intervaloAtualizacao) {
+      clearInterval(this.intervaloAtualizacao);
+    }
     sessionStorage.removeItem('usuario');
     this.router.navigateByUrl('/home', { replaceUrl: true });
   }
